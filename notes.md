@@ -17,3 +17,9 @@ A list of challenges faced while building the app.
 - Already seeing some of the limitations with using a sqlite database
     - can't use enums to define a set list of scalars for the db
     - can't use createMany from the Prisma client api
+- When querying relational data you need to use select or include to actually get it to appear in your queries
+    - Need to research whether this could appear in the types prisma generates or not. [It currently doesn't by default but you can make it work.][1]
+
+
+
+    [1]: <https://github.com/prisma/prisma/discussions/10928#:~:text=Prisma%20Version&text=Since%20Prisma%20queries%20do%20not,%2Din%20utility%20types%2C%20though.>

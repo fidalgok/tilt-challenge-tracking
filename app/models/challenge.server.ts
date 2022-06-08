@@ -1,6 +1,10 @@
-import type { Challenge, User } from "@prisma/client";
+import type { Challenge, Prisma, User } from "@prisma/client";
 
 import { prisma } from "~/db.server";
+
+export type ChallengeWithActivities = Prisma.ChallengeGetPayload<{
+  include: {activity: true}
+}>
 
 export type {Challenge, Entry} from "@prisma/client";
 
