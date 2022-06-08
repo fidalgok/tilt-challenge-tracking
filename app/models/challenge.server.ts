@@ -7,7 +7,8 @@ export type {Challenge, Entry} from "@prisma/client";
 export function getChallenge({id, userId}: Pick<Challenge, "id"> & {userId: User["id"]}) {
    
   return prisma.challenge.findFirst({
-    where: { id, published: true, users:{some: {id: userId}} }
+    where: { id, published: true, users:{some: {id: userId}} },
+    include: { activity: true },
     
   });
 }

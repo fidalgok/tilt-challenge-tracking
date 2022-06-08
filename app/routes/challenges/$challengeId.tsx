@@ -35,7 +35,12 @@ export default function ChallengeDetailsPage(){
     return (
         <div>
             <p>You've reached the challenge details page.</p>
+            <pre>
+                <code>
+
             {JSON.stringify(data, null, 2)}
+                </code>
+            </pre>
         </div>
     )
 }
