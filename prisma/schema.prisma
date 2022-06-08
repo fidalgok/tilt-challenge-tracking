@@ -7,15 +7,20 @@ generator client {
   provider = "prisma-client-js"
 }
 
+
+
 model User {
   id    String @id @default(cuid())
   email String @unique
+  role String @default("MEMBER")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   password Password?
   notes    Note[]
+  challenges Challenge[]
+  entries Entry[]
 }
 
 model Password {
@@ -36,3 +41,70 @@ model Note {
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   userId String
 }
+
+model Challenge {
+  id    String @id @default(cuid())
+  title String
+  description String
+  published Boolean @default(false)
+  startDate DateTime
+  endDate DateTime
+  archive Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+ 
+  users User[]
+  activity ChallengeActivity[]
+}
+
+model Activity {
+  id   String @id @default(cuid())
+  name String
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  challengeActivity ChallengeActivity[]
+}
+
+model ChallengeActivity {
+  trackType String
+  unit String?
+  amount Int?
+  description String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  challengeId String 
+  challenge Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  activityId String
+  activity Activity @relation(fields: [activityId], references: [id])
+  entries Entry[]
+
+  @@id([challengeId, activityId])
+
+}
+
+
+model Entry {
+  id String @id @default(cuid())
+  date DateTime
+  isComplete Boolean? @default(false)
+  amount Int?
+  notes String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  activityId String
+  challengeId String
+  activity ChallengeActivity @relation(fields: [challengeId, activityId], references: [challengeId,activityId])
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  userId String
+
+}
+
+

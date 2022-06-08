@@ -4,31 +4,50 @@ import bcrypt from "bcryptjs";
 const prisma = new PrismaClient();
 
 async function seed() {
-  const email = "rachel@remix.run";
+  const memberEmail = "rachel@remix.run";
+  const adminEmail = "kyle.fidalgo@gmail.com"
 
   // cleanup the existing database
-  await prisma.user.delete({ where: { email } }).catch(() => {
+  await prisma.user.deleteMany({}).catch(() => {
     // no worries if it doesn't exist yet
   });
 
-  const hashedPassword = await bcrypt.hash("racheliscool", 10);
+  const memberHashedPassword = await bcrypt.hash("racheliscool", 10);
+  const adminHashedPassword = await bcrypt.hash("racheliscool", 10);
 
-  const user = await prisma.user.create({
-    data: {
-      email,
+  const memberPromise = prisma.user.create({
+    data: 
+      {
+      email: memberEmail,
       password: {
         create: {
-          hash: hashedPassword,
+          hash: memberHashedPassword,
         },
       },
     },
+  
   });
+  const adminPromise = prisma.user.create({
+    data: 
+      {
+      email: adminEmail,
+      role: "ADMIN",
+      password: {
+        create: {
+          hash: adminHashedPassword,
+        },
+      },
+    },
+  
+  });
+
+  const [member, admin] = await Promise.all([memberPromise,adminPromise])
 
   await prisma.note.create({
     data: {
       title: "My first note",
       body: "Hello, world!",
-      userId: user.id,
+      userId: member.id,
     },
   });
 
@@ -36,7 +55,7 @@ async function seed() {
     data: {
       title: "My second note",
       body: "Hello, world!",
-      userId: user.id,
+      userId: admin.id,
     },
   });
 
