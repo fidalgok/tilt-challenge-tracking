@@ -69,3 +69,20 @@ export function useUser(): User {
 export function validateEmail(email: unknown): email is string {
   return typeof email === "string" && email.length > 3 && email.includes("@");
 }
+
+export function daysBetween(start: Date, end: Date): number {
+  start = new Date(start);
+  end = new Date(end);
+  const diff = end.getTime() - start.getTime();
+  // The +2 at the end makes it inclusive of the end date and the start date since we're flooring the difference.
+  return Math.floor(diff / (1000 * 60 * 60 * 24)) + 1;
+}
+
+export function daysFromToday(endDate: Date): number {
+  const start = new Date();
+  return daysBetween(start, endDate);
+}
+
+export function UTCFormattedDate(date: Date): string {
+  return date.getUTCFullYear() + "-" + (date.getUTCMonth() + 1) + "-" + date.getUTCDate();
+}

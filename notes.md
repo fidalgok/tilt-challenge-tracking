@@ -6,7 +6,7 @@ Along the way I'll keep track of challenges, thoughts behind how I implemented t
 
 ## Tech Stack
 
-Right off the bat I knew I wanted to try out Remix. I decided to go with one of their pre-built stacks to get a lot of the boilerplate out of the way as well as making some organizational decisions for me. I went with their Indie Stack which uses a simple Sqlite database, Prisma, and deploys to Fly.io.
+Right off the bat I knew I wanted to try out Remix. I decided to go with one of their pre-built stacks to get a lot of the boilerplate out of the way as well as making some sensible tech and organizational decisions for me. I went with their Indie Stack which uses a simple Sqlite database, Prisma, and deploys to Fly.io.
 
 ## Challenges
 
@@ -19,7 +19,11 @@ A list of challenges faced while building the app.
     - can't use createMany from the Prisma client api
 - When querying relational data you need to use select or include to actually get it to appear in your queries
     - Need to research whether this could appear in the types prisma generates or not. [It currently doesn't by default but you can make it work.][1]
+- Javascript Dates... oh boy. Had to do some [research into Javascript dates][2], [how Prisma stores and serves dates back to you][3], and how to reconcile javascript date manipulation between the various dates stored.
+- Couldn't get the users profile to load in the project root for some reason. Even though I included the one to many relationship in the query and even added the code from one of the points above, my application still didn't recognize that the user object had a profile on it. Maybe it's due to how optional user handles the use matches? :shrug:
 
 
 
     [1]: <https://github.com/prisma/prisma/discussions/10928#:~:text=Prisma%20Version&text=Since%20Prisma%20queries%20do%20not,%2Din%20utility%20types%2C%20though.>
+    [2]: <https://dev.to/zachgoll/a-complete-guide-to-javascript-dates-and-why-your-date-is-off-by-1-day-fi1>
+    [3]: <https://www.prisma.io/docs/reference/api-reference/prisma-schema-reference#model-field-scalar-types>
