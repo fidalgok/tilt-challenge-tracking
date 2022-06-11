@@ -51,8 +51,8 @@ export default function ChallengeEntries() {
 
                             const entry = entries?.find(e => UTCFormattedDate(new Date(e.date)) === dateAsUTCString);
                             const entryDate = new Date(date);
-                            const month = entryDate.getMonth();
-                            const dayOfMonth = entryDate.getDate();
+                            const month = formattedDate.split(' ')[0];
+                            const dayOfMonth = formattedDate.split(' ')[1];
                             return (
                                 <tr key={day} className="contents">
                                     <td>{day}</td>

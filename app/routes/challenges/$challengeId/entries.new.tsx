@@ -80,7 +80,7 @@ export default function NewChallengeEntryPage() {
     const day = searchParams.get("day");
     const matches = useMatches();
     const params = useParams();
-    const { challengeId } = params
+    const { challengeId } = params;
     const amountRef = React.useRef<HTMLInputElement>(null);
     const notesRef = React.useRef<HTMLTextAreaElement>(null);
 
@@ -107,19 +107,20 @@ export default function NewChallengeEntryPage() {
             }}
         >
             <div>
-                New Entry for {matchesData.challenge?.title} on {month}/{day}
+                <p>New Entry for {month} {day}</p>
                 <input type="hidden" name="month" value={month || ""} />
                 <input type="hidden" name="day" value={day || ""} />
             </div>
             <div>
                 <label className="flex w-full flex-col gap-1">
-                    <span>Amount: </span>
+                    <span>{matchesData.challenge?.activity[0].unit} Amount: </span>
                     <input
                         ref={amountRef}
                         name="amount"
                         className="flex-1 rounded-md border-2 border-blue-500 px-x text-lg leading-loose"
                         aria-invalid={actionData?.errors?.amount ? true : undefined}
                         aria-errormessage={actionData?.errors?.amount ? "amount-error" : undefined}
+                        type="number"
 
                     />
                 </label>
