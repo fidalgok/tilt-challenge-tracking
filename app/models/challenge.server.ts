@@ -1,4 +1,4 @@
-import type { Challenge, Prisma, User, Entry } from "@prisma/client";
+import type { Challenge, Prisma, User, ChallengeActivity } from "@prisma/client";
 
 import { prisma } from "~/db.server";
 
@@ -57,4 +57,26 @@ export function getChallengeLeaderboard({ id }: Pick<Challenge, "id">) {
     }
   })
 
+}
+
+export function createChallengeEntry({ challengeId, userId, activityId, date, amount, notes }:
+  {
+    challengeId: ChallengeActivity["challengeId"],
+    userId: User["id"],
+    activityId: ChallengeActivity["activityId"],
+    date: Date,
+    amount: number,
+    notes?: string
+  }) {
+  return prisma.entry.create({
+
+    data: {
+      challengeId,
+      userId,
+      activityId,
+      date,
+      amount,
+      notes
+    }
+  })
 }

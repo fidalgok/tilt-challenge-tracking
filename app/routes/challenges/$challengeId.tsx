@@ -1,15 +1,14 @@
 import { Profile } from "@prisma/client";
 import type { ActionFunction, LoaderFunction } from "@remix-run/node";
 import { json, redirect } from "@remix-run/node";
-import { Form, Link, useCatch, useLoaderData } from "@remix-run/react";
+import { Form, Link, Outlet, useCatch, useLoaderData } from "@remix-run/react";
 import invariant from "tiny-invariant";
 
 
 
 import { Entry, ChallengeWithActivities, getChallengeLeaderboard } from "~/models/challenge.server";
 import { getChallengeEntries, getChallenge, getTotalSteps } from "~/models/challenge.server";
-//TODO: bring in the ability to create and delete entries
-//TODO: bring in the ability to aggregate entries for the leaderboard
+
 import { requireUserId } from "~/session.server";
 
 import { daysBetween, UTCFormattedDate } from "~/utils";
@@ -95,12 +94,8 @@ export default function ChallengeDetailsPage() {
                             <p className="text-center text-4xl font-extrabold">{daysBetween(new Date(), data.challenge.endDate) + 1}</p>
                         </div>
                     </div>
-                    <ChallengeEntries
-                        entries={data.entries}
-                        challengeStart={new Date(data.challenge.startDate)}
-                        challengeEnd={new Date(data.challenge.endDate)}
-                        challengeId={data.challenge.id}
-                    />
+
+                    <Outlet />
                 </div>
                 <div className="self-start pt-4 px-2 border rounded border-slate-100">
                     <h4 className="text-2xl font-bold">Leaderboard</h4>
@@ -139,67 +134,3 @@ export function CatchBoundary() {
     throw new Error(`Unexpected caught response with status: ${caught.status}`);
 }
 
-function ChallengeEntries({ challengeId, entries, challengeStart, challengeEnd }: { challengeId: string, entries: Entry[], challengeStart: Date, challengeEnd: Date }) {
-    // TODO: Pass in Challenge start and end date to calculate days of challenge
-    // loop over those days and display the entries that match the date
-    const challengeDays = daysBetween(challengeStart, challengeEnd);
-    // create an empty array of challengeDays with an index for the day and the corresponding date    
-    const challengeDaysArray = Array.from({ length: challengeDays }, (_, i) =>
-    ({
-        day: i + 1,
-        date: challengeStart.getTime() + ((i) * 24 * 60 * 60 * 1000),
-        dateAsUTCString: UTCFormattedDate(new Date(challengeStart.getTime() + ((i) * 24 * 60 * 60 * 1000))),
-        formattedDate: new Date(challengeStart.getTime() + ((i + 1) * 24 * 60 * 60 * 1000)).toLocaleDateString('en-US', {
-            month: 'short',
-            day: 'numeric',
-        }),
-
-    }));
-    console.log({ challengeDaysArray, entries })
-    return (
-        <div >
-
-
-            <table className="border-collapse grid gap-6 grid-cols-[min-content_max-content_1fr_2fr_max-content] grid-flow-row">
-                <thead className="contents">
-                    <tr className="contents">
-
-                        <th className="sticky top-0 bg-white text-left py-3">Day</th>
-                        <th className="sticky top-0 bg-white text-left py-3">Date</th>
-                        <th className="sticky top-0 bg-white text-left py-3">Steps</th>
-                        <th className="sticky top-0 bg-white text-left py-3">Notes</th>
-                        <th className="sticky top-0 bg-white text-left py-3">Actions</th>
-                    </tr>
-                </thead>
-                <tbody className="contents">
-                    {
-                        challengeDaysArray.map(({ day, dateAsUTCString, formattedDate }) => {
-
-                            const entry = entries.find(e => UTCFormattedDate(new Date(e.date)) === dateAsUTCString);
-
-                            return (
-                                <tr key={day} className="contents">
-                                    <td>{day}</td>
-                                    <td>{formattedDate}</td>
-                                    <td>{entry?.amount || " "}</td>
-                                    <td>{entry?.notes || " "}</td>
-                                    <td>
-                                        <Link to={`entries/create`}>Add</Link>
-                                        {entry && (
-                                            <>
-                                                <Link to={`entries/${entry.id}/edit`}>Edit</Link>
-                                                <Link to={`entries/${entry.id}/delete`}>Delete</Link>
-                                            </>
-                                        )}
-
-                                    </td>
-                                </tr>
-                            )
-                        })
-                    }
-
-                </tbody>
-            </table>
-        </div>
-    )
-}
