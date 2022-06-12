@@ -20,7 +20,7 @@ type ActionData = {
     day?: string;
 }
 
-const months = {
+const months: { [key: string]: number } = {
     "Jan": 1,
     "Feb": 2,
     "Mar": 3,
@@ -41,9 +41,14 @@ export const action: ActionFunction = async ({ request, params }) => {
     const formData = await request.formData();
     const amount = Number(formData.get("amount"));
     const notes = formData.get("notes");
-    let month = formData.get("month");
-    month = typeof month == 'string' && month?.length ? month.toString() : new Date().getUTCMonth();
+    const month = formData.get("month");
     const day = formData.get("day");
+    if (typeof month !== 'string' || month.length == 0) {
+        return json<ActionData>(
+            { errors: { amount: "Whoops! Looks like something went wrong." }, month: `${month}`, day: `${day}` },
+            { status: 400 }
+        );
+    }
     const date = new Date(`${new Date().getUTCFullYear()}/${months[month]}/${day}`);
     //hidden fields
     const challengeId = params.challengeId;
