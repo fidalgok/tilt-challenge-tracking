@@ -28,7 +28,7 @@ export const action: ActionFunction = async ({ request }) => {
   const formData = await request.formData();
   const email = formData.get("email");
   const password = formData.get("password");
-  const redirectTo = safeRedirect(formData.get("redirectTo"), "/notes");
+  const redirectTo = safeRedirect(formData.get("redirectTo"), "/challenges");
   const remember = formData.get("remember");
 
   if (!validateEmail(email)) {
@@ -94,7 +94,7 @@ export default function LoginPage() {
     <div className="flex min-h-full flex-col justify-center">
       <div className="mx-auto w-full max-w-2xl px-8">
 
-      <h1 className="text-5xl text-center mb-8">Tilt Challenge Tracking</h1>
+        <h1 className="text-5xl text-center mb-8">Tilt Challenge Tracking</h1>
       </div>
       <div className="mx-auto w-full max-w-md px-8">
         <Form method="post" className="space-y-6">
