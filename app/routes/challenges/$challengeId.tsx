@@ -56,7 +56,12 @@ export const loader: LoaderFunction = async ({ request, params }) => {
                 exists.amount ? exists.amount += entry.amount : entry.amount;
             }
             return acc;
-        }, []).map(users => ({ name: users.name, steps: users.amount })).sort();
+        }, []).map(users => ({ name: users.name, steps: users.amount })).sort((userA: { name: string; steps: number }, userB: { name: string; steps: number }) => {
+            if (userA.steps > userB.steps) {
+                return -1;
+            }
+            return 1;
+        });
 
 
     return json<LoaderData>({ challenge, entries: entries?.entries, totalSteps: aggregation._sum.amount || 0, leaderboard });
