@@ -114,10 +114,10 @@ export const action: ActionFunction = async ({ request }) => {
         )
     }
 
-    const splitStartDate = startDate.split("-").map((datePart: string) => parseInt(datePart));
-    const convertedStartDate = new Date(splitStartDate[0], splitStartDate[1] - 1, splitStartDate[2]);
-    const splitEndDate = endDate.split("-").map((datePart: string) => parseInt(datePart));
-    const convertedEndDate = new Date(splitEndDate[0], splitEndDate[1] - 1, splitEndDate[2]);
+
+    const convertedStartDate = new Date(startDate);
+
+    const convertedEndDate = new Date(endDate);
 
     const challenge = await createChallenge({
         title: challengeTitle,
@@ -229,7 +229,7 @@ export default function AdminPage() {
                         <input
                             ref={startDateRef}
                             name="startDate"
-                            placeholder="YYYY-MM-DD"
+                            placeholder="EST EX: 2022-05-01T00:00:00-0400"
                             className="flex-1 rounded-md border-2 focus:border-blue-500 px-2 text-lg leading-loose"
                             aria-invalid={actionData?.errors?.startDate ? true : undefined}
                             aria-errormessage={actionData?.errors?.startDate ? "startDate-error" : undefined}
@@ -249,7 +249,7 @@ export default function AdminPage() {
                         <input
                             ref={endDateRef}
                             name="endDate"
-                            placeholder="YYYY-MM-DD"
+                            placeholder="EST EX: 2022-05-01T00:00:00-0400"
                             className="flex-1 rounded-md border-2 focus:border-blue-500 px-2 text-lg leading-loose"
                             aria-invalid={actionData?.errors?.endDate ? true : undefined}
                             aria-errormessage={actionData?.errors?.endDate ? "endDate-error" : undefined}
