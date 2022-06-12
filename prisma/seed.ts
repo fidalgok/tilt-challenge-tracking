@@ -13,23 +13,35 @@ async function seed() {
   });
 
   const memberHashedPassword = await bcrypt.hash("racheliscool", 10);
-  const adminHashedPassword = await bcrypt.hash("racheliscool", 10);
+  const adminHashedPassword = await bcrypt.hash("kyleiscool", 10);
 
   const memberPromise = prisma.user.create({
-    data: 
-      {
+    data:
+    {
       email: memberEmail,
       password: {
         create: {
           hash: memberHashedPassword,
         },
       },
+      role: "MEMBER",
+      profile: {
+        create: {
+
+          firstName: "Rachel",
+          lastName: "Remix",
+          avatar: "https://placekitten.com/80/80",
+          gym: "Waltham"
+        }
+
+
+      }
     },
-  
+
   });
   const adminPromise = prisma.user.create({
-    data: 
-      {
+    data:
+    {
       email: adminEmail,
       role: "ADMIN",
       password: {
@@ -37,25 +49,71 @@ async function seed() {
           hash: adminHashedPassword,
         },
       },
+      profile: {
+        create: {
+          firstName: "Kyle",
+          lastName: "Fidalgo",
+          avatar: "https://placekitten.com/80/80",
+          gym: "Waltham"
+        }
+      }
     },
-  
+
   });
 
-  const [member, admin] = await Promise.all([memberPromise,adminPromise])
+  const [member, admin] = await Promise.all([memberPromise, adminPromise])
 
-  await prisma.note.create({
-    data: {
-      title: "My first note",
-      body: "Hello, world!",
-      userId: member.id,
+  const stepChallenge = await prisma.challenge.upsert({
+    where: {
+      title: "Tilt Step Up Challenge"
+    },
+    update: {
+      title: "Tilt Step Up Challenge",
+    },
+    create: {
+      title: "Tilt Step Up Challenge",
+      description: "Accumulate 10,000 step-ups to any height box, wall, child, dog, tree stump, or anything else by August 31st",
+      startDate: new Date(2022, 4, 1),
+      endDate: new Date(2022, 8, 31),
+      public: true,
+      published: true
     },
   });
 
-  await prisma.note.create({
+  const challengeActivity = await prisma.challengeActivity.create({
     data: {
-      title: "My second note",
-      body: "Hello, world!",
-      userId: admin.id,
+      challenge: {
+        connect: {
+          id: stepChallenge.id,
+        }
+      },
+      amount: 10000,
+      trackType: "Reps",
+      unit: "Steps",
+      activity: {
+        connectOrCreate: {
+          where: {
+            name: "Step Ups",
+          },
+          create: {
+            name: "Step Ups",
+          }
+        }
+      },
+
+    }
+  })
+
+  await prisma.challenge.update({
+    where: {
+      id: stepChallenge.id,
+    },
+    data: {
+      users: {
+        connect: [
+          { id: member.id }, { id: admin.id }
+        ]
+      }
     },
   });
 
