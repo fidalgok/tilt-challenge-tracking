@@ -1,6 +1,8 @@
 import { Entry } from "@prisma/client";
-import { Link } from "@remix-run/react";
-import { ChallengeWithActivities } from "~/models/challenge.server";
+import { Form, Link, useActionData, useTransition } from "@remix-run/react";
+import { ActionFunction, json } from "@remix-run/node";
+import { ChallengeWithActivities, deleteEntry } from "~/models/challenge.server";
+import { requireUser } from "~/session.server";
 import { daysBetween, useMatchesData, UTCFormattedDate } from "~/utils";
 
 export type challengeMatchesData = {
@@ -8,8 +10,37 @@ export type challengeMatchesData = {
     entries?: Entry[],
 }
 
-export default function ChallengeEntries() {
+type ActionData = {
+    errors?: {
+        id?: string;
+    }
+}
 
+export const action: ActionFunction = async ({ request }) => {
+    let user = await requireUser(request)
+    let formData = await request.formData();
+    let { _action, ...values } = Object.fromEntries(formData);
+
+    if (!values?.id || typeof values.id !== "string") {
+        return json<ActionData>(
+            { errors: { id: "The entry id is missing." } },
+            { status: 400 }
+        );
+    }
+
+    if (_action === "delete") {
+        // delete entry
+        return deleteEntry({ id: values.id, userId: user.id })
+    } else {
+        // do nothing for now, may want to come back and add other capabilities later.
+    }
+    return null;
+}
+
+export default function ChallengeEntries() {
+    const actionData = useActionData() as ActionData;
+    let transition = useTransition();
+    let busy = transition.submission;
     const matches = useMatchesData('routes/challenges/$challengeId');
     const { challenge, entries } = matches as challengeMatchesData;
     const challengeStart = new Date(challenge?.startDate || "now");
@@ -54,21 +85,42 @@ export default function ChallengeEntries() {
                             const month = formattedDate.split(' ')[0];
                             const dayOfMonth = formattedDate.split(' ')[1];
                             return (
-                                <tr key={day} className="contents">
+                                <tr key={day} className="contents hover:bg-slate-100" >
                                     <td>{day}</td>
                                     <td>{formattedDate}</td>
                                     <td>{entry?.amount || " "}</td>
                                     <td>{entry?.notes || " "}</td>
-                                    <td>
-                                        <Link to={`entries/new?month=${month}&day=${dayOfMonth}`}>Add</Link>
-                                        {entry && (
-                                            <>
-                                                <Link to={`entries/${entry.id}/edit`}>Edit</Link>
-                                                <Link to={`entries/${entry.id}/delete`}>Delete</Link>
-                                            </>
-                                        )}
+                                    {!entry && (
+                                        <td>
+                                            <Link className="px-2" to={`entries/new?month=${month}&day=${dayOfMonth}`}>Add</Link>
+                                        </td>
+                                    )}
+                                    {entry && (
+                                        <td>
 
-                                    </td>
+                                            <Link className="px-2 mr-3" to={`entries/${entry.id}/edit`}>Edit</Link>
+                                            <Form
+                                                method="post"
+                                                className="inline px-2"
+                                            >
+                                                <input type="hidden" name="id" value={entry.id} />
+                                                <button
+                                                    type="submit"
+                                                    name="_action"
+                                                    value="delete"
+                                                >
+                                                    {busy ? "Deleting" : "Delete"}
+                                                </button>
+                                            </Form>
+                                            {actionData?.errors?.id && (
+                                                <div className="text-red-500">
+                                                    {actionData.errors.id}
+                                                </div>
+                                            )}
+
+                                        </td>
+                                    )}
+
                                 </tr>
                             )
                         })

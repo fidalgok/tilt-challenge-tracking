@@ -1,12 +1,16 @@
-import type { ActionFunction } from "@remix-run/node";
+import type { LoaderFunction, ActionFunction } from "@remix-run/node";
 import { json, redirect } from "@remix-run/node";
-import { Form, useActionData, useParams, useSearchParams, useMatches } from "@remix-run/react";
+import { Form, useActionData, useParams, useSearchParams, useMatches, useCatch, useLoaderData } from "@remix-run/react";
 import * as React from "react";
 
-import { createChallengeEntry } from "~/models/challenge.server";
+import type { Entry } from "~/models/challenge.server"
+import { getEntryById, updateEntry } from "~/models/challenge.server";
 import { requireUserId } from "~/session.server";
 
 import type { challengeMatchesData } from "~/routes/challenges/$challengeId/index";
+import invariant from "tiny-invariant";
+import { format, getDate } from "date-fns";
+
 
 type ActionData = {
     errors?: {
@@ -18,6 +22,10 @@ type ActionData = {
     },
     month?: string;
     day?: string;
+}
+
+type LoaderData = {
+    entry: Entry
 }
 
 const months = {
@@ -42,11 +50,12 @@ export const action: ActionFunction = async ({ request, params }) => {
     const amount = Number(formData.get("amount"));
     const notes = formData.get("notes");
     let month = formData.get("month");
-    month = typeof month == 'string' && month?.length ? month.toString() : new Date().getUTCMonth();
+    month = typeof month == 'string' && month?.length ? month : new Date().getUTCMonth();
     const day = formData.get("day");
     const date = new Date(`${new Date().getUTCFullYear()}/${months[month]}/${day}`);
     //hidden fields
     const challengeId = params.challengeId;
+    const entryId = params.entryId;
     const activityId = formData.get("activityId");
 
     console.log({ userId, amount, notes, date, challengeId, activityId });
@@ -77,8 +86,14 @@ export const action: ActionFunction = async ({ request, params }) => {
             { errors: { activityId: "Activity ID is required." }, month: `${month}`, day: `${day}` },
             { status: 400 });
     }
+    if (typeof entryId !== "string" || entryId.length === 0) {
+        return json<ActionData>(
+            { errors: { activityId: "Entry ID is required." }, month: `${month}`, day: `${day}` },
+            { status: 400 });
+    }
 
-    const challengeEntry = await createChallengeEntry({
+    const challengeEntry = await updateEntry(entryId, {
+
         userId,
         amount,
         notes,
@@ -91,11 +106,23 @@ export const action: ActionFunction = async ({ request, params }) => {
     return redirect(`/challenges/${challengeId}`);
 }
 
-export default function NewChallengeEntryPage() {
+export const loader: LoaderFunction = async ({ request, params }) => {
+    const userId = await requireUserId(request);
+    invariant(params.entryId, "Entry ID not found");
+    const entry = await getEntryById(params.entryId);
+    if (!entry) {
+        throw new Response("Not Found", { status: 404 });
+    }
+    return json<LoaderData>({ entry });
+}
+
+export default function EditChallengeEntryPage() {
     const actionData = useActionData() as ActionData;
-    const [searchParams] = useSearchParams();
-    const month = actionData?.month ? actionData.month : searchParams.get("month");
-    const day = actionData?.day ? actionData.day : searchParams.get("day");
+    const loaderData = useLoaderData() as LoaderData;
+
+
+    const month = format(new Date(loaderData.entry.date), "MMM");
+    const day = getDate(new Date(loaderData.entry.date));
     const matches = useMatches();
     const params = useParams();
 
@@ -125,7 +152,7 @@ export default function NewChallengeEntryPage() {
             }}
         >
             <div>
-                <p>New Entry for {month} {day}</p>
+                <p>Edit Entry for {month} {day}</p>
 
             </div>
             <div>
@@ -134,7 +161,7 @@ export default function NewChallengeEntryPage() {
                     <input
                         ref={amountRef}
                         name="amount"
-
+                        defaultValue={loaderData?.entry?.amount || 0}
                         className="flex-1 rounded-md border-2 focus:border-blue-500 px-2 text-lg leading-loose"
                         aria-invalid={actionData?.errors?.amount ? true : undefined}
                         aria-errormessage={actionData?.errors?.amount ? "amount-error" : undefined}
@@ -161,7 +188,9 @@ export default function NewChallengeEntryPage() {
                         rows={4}
                         placeholder="Ex. 20 inch box, body weight"
 
-                    ></textarea>
+                    >
+                        {loaderData.entry?.notes}
+                    </textarea>
                 </label>
                 {actionData?.errors?.notes && (
                     <div className="text-red-500 text-sm italic" id="amount-error">
@@ -170,8 +199,8 @@ export default function NewChallengeEntryPage() {
                 )}
             </div>
             <div>
-                <input type="hidden" name="month" value={month || ""} />
-                <input type="hidden" name="day" value={day || ""} />
+                <input type="hidden" name="month" value={format(new Date(loaderData.entry.date), "MMM") || ""} />
+                <input type="hidden" name="day" value={getDate(new Date(loaderData.entry.date)) || ""} />
                 <input type="hidden" name="activityId" value={matchesData.challenge?.activity[0].activityId || ""} />
             </div>
             <div className="text-right">
@@ -185,4 +214,21 @@ export default function NewChallengeEntryPage() {
 
         </Form>
     )
+}
+
+
+export function ErrorBoundary({ error }: { error: Error }) {
+    console.error(error);
+
+    return <div>An unexpected error occurred: {error.message}</div>;
+}
+
+export function CatchBoundary() {
+    const caught = useCatch();
+
+    if (caught.status === 404) {
+        return <div>Entry not found</div>;
+    }
+
+    throw new Error(`Unexpected caught response with status: ${caught.status}`);
 }

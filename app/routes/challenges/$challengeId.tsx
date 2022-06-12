@@ -1,7 +1,7 @@
 import { Profile } from "@prisma/client";
 import type { ActionFunction, LoaderFunction } from "@remix-run/node";
 import { json, redirect } from "@remix-run/node";
-import { Form, Link, Outlet, useCatch, useLoaderData } from "@remix-run/react";
+import { Form, Link, Outlet, useCatch, useLoaderData, useLocation } from "@remix-run/react";
 import invariant from "tiny-invariant";
 
 
@@ -44,7 +44,7 @@ export const loader: LoaderFunction = async ({ request, params }) => {
     const leaderboardData = await getChallengeLeaderboard({ id: params.challengeId });
     const leaderboard = leaderboardData
         .map((entry) => ({
-            name: `${entry.user.profile?.firstName} ${entry.user.profile?.lastName}`,
+            name: `${entry.user?.profile?.firstName || 'anonymous'} ${entry.user?.profile?.lastName || ''}`,
             userId: entry.userId,
             amount: entry.amount || 0
         }))
@@ -66,6 +66,7 @@ export const loader: LoaderFunction = async ({ request, params }) => {
 export default function ChallengeDetailsPage() {
     const data = useLoaderData() as LoaderData;
     const totalSteps = Number(data.totalSteps);
+
 
     return (
         <>

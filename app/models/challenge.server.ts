@@ -1,4 +1,4 @@
-import type { Challenge, Prisma, User, ChallengeActivity } from "@prisma/client";
+import type { Challenge, Prisma, User, ChallengeActivity, Entry } from "@prisma/client";
 
 import { prisma } from "~/db.server";
 
@@ -12,6 +12,14 @@ export function getChallenge({ id, userId }: Pick<Challenge, "id"> & { userId: U
 
   return prisma.challenge.findFirst({
     where: { id, published: true, users: { some: { id: userId } } },
+    include: { activity: true },
+
+  });
+}
+export function getOpenChallenges({ userId }: { userId: User["id"] }) {
+
+  return prisma.challenge.findMany({
+    where: { published: true, public: true, users: { none: { id: userId } } },
     include: { activity: true },
 
   });
@@ -42,6 +50,19 @@ export function getTotalSteps({ id, userId }: Pick<Challenge, "id"> & { userId: 
         { userId: { equals: userId } },
         { challengeId: { equals: id } }
       ]
+    }
+  })
+}
+
+export function joinChallengeById({ id, userId }: { id: Challenge["id"], userId: User["id"] }) {
+  return prisma.challenge.update({
+    where: { id },
+    data: {
+      users: {
+        connect: {
+          id: userId
+        }
+      }
     }
   })
 }
@@ -79,4 +100,26 @@ export function createChallengeEntry({ challengeId, userId, activityId, date, am
       notes
     }
   })
+}
+
+export function getEntryById(id: Entry["id"]) {
+  return prisma.entry.findFirst({
+    where: { id }
+  });
+}
+
+export function updateEntry(id: Entry["id"], data: Partial<Entry>) {
+  return prisma.entry.update({
+    where: { id },
+    data
+  })
+}
+
+export function deleteEntry({
+  id,
+  userId,
+}: Pick<Entry, "id"> & { userId: User["id"] }) {
+  return prisma.entry.deleteMany({
+    where: { id, userId },
+  });
 }
