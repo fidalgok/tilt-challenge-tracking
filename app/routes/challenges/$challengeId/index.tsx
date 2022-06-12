@@ -54,7 +54,7 @@ export default function ChallengeEntries() {
         day: i + 1,
         date: challengeStart.getTime() + ((i) * 24 * 60 * 60 * 1000),
         dateAsUTCString: UTCFormattedDate(new Date(challengeStart.getTime() + ((i) * 24 * 60 * 60 * 1000))),
-        formattedDate: new Date(challengeStart.getTime() + ((i + 1) * 24 * 60 * 60 * 1000)).toLocaleDateString('en-US', {
+        formattedDate: new Date(challengeStart.getTime() + ((i) * 24 * 60 * 60 * 1000)).toLocaleDateString('en-US', {
             month: 'short',
             day: 'numeric',
         }),

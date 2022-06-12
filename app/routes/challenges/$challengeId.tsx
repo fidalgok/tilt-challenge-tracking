@@ -107,7 +107,7 @@ export default function ChallengeDetailsPage() {
                     <h4 className="text-2xl font-bold">Leaderboard</h4>
                     <hr />
                     {data.leaderboard.map((entry, index) => (
-                        <div key={entry.name} className="flex border-b border-slate-100 py-3 last:border-b-0">
+                        <div key={`${entry.name}-${entry.steps}`} className="flex border-b border-slate-100 py-3 last:border-b-0">
                             <div className="mr-4 flex items-center text-lg font-bold">{index + 1}</div>
                             <div className="grow flex flex-col">
                                 {entry.name}

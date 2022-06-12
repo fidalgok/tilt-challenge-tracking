@@ -22,11 +22,15 @@ interface ActionData {
   errors: {
     email?: string;
     password?: string;
+    firstName?: string;
+    lastName?: string;
   };
 }
 
 export const action: ActionFunction = async ({ request }) => {
   const formData = await request.formData();
+  const firstName = formData.get("firstname");
+  const lastName = formData.get("lastname");
   const email = formData.get("email");
   const password = formData.get("password");
   const redirectTo = safeRedirect(formData.get("redirectTo"), "/");
@@ -38,6 +42,19 @@ export const action: ActionFunction = async ({ request }) => {
     );
   }
 
+  if (typeof lastName !== "string" || lastName.length === 0) {
+    return json<ActionData>(
+      { errors: { lastName: "Last name is required" } },
+      { status: 400 }
+    );
+  }
+
+  if (typeof firstName !== "string" || firstName.length === 0) {
+    return json<ActionData>(
+      { errors: { firstName: "First name is required" } },
+      { status: 400 }
+    );
+  }
   if (typeof password !== "string" || password.length === 0) {
     return json<ActionData>(
       { errors: { password: "Password is required" } },
@@ -47,7 +64,7 @@ export const action: ActionFunction = async ({ request }) => {
 
   if (password.length < 8) {
     return json<ActionData>(
-      { errors: { password: "Password is too short" } },
+      { errors: { password: "Password is too short. It should be more than 8 characters." } },
       { status: 400 }
     );
   }
@@ -60,7 +77,7 @@ export const action: ActionFunction = async ({ request }) => {
     );
   }
 
-  const user = await createUser(email, password);
+  const user = await createUser(firstName, lastName, email, password);
 
   return createUserSession({
     request,
@@ -80,6 +97,8 @@ export default function Join() {
   const [searchParams] = useSearchParams();
   const redirectTo = searchParams.get("redirectTo") ?? undefined;
   const actionData = useActionData() as ActionData;
+  const firstNameRef = React.useRef<HTMLInputElement>(null);
+  const lastNameRef = React.useRef<HTMLInputElement>(null);
   const emailRef = React.useRef<HTMLInputElement>(null);
   const passwordRef = React.useRef<HTMLInputElement>(null);
 
@@ -95,6 +114,61 @@ export default function Join() {
     <div className="flex min-h-full flex-col justify-center">
       <div className="mx-auto w-full max-w-md px-8">
         <Form method="post" className="space-y-6">
+          <div>
+            <label
+              htmlFor="firstname"
+              className="block text-sm font-medium text-gray-700"
+            >
+              First Name
+            </label>
+            <div className="mt-1">
+              <input
+                ref={firstNameRef}
+                id="firstname"
+                required
+                autoFocus={true}
+                name="firstname"
+                type="text"
+
+                aria-invalid={actionData?.errors?.firstName ? true : undefined}
+                aria-describedby="firstname-error"
+                className="w-full rounded border border-gray-500 px-2 py-1 text-lg"
+              />
+              {actionData?.errors?.firstName && (
+                <div className="pt-1 text-red-700" id="firstname-error">
+                  {actionData.errors.firstName}
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div>
+            <label
+              htmlFor="lastname"
+              className="block text-sm font-medium text-gray-700"
+            >
+              Last Name
+            </label>
+            <div className="mt-1">
+              <input
+                ref={lastNameRef}
+                id="lastname"
+                required
+
+                name="lastname"
+                type="text"
+
+                aria-invalid={actionData?.errors?.lastName ? true : undefined}
+                aria-describedby="lastname-error"
+                className="w-full rounded border border-gray-500 px-2 py-1 text-lg"
+              />
+              {actionData?.errors?.lastName && (
+                <div className="pt-1 text-red-700" id="lastname-error">
+                  {actionData.errors.lastName}
+                </div>
+              )}
+            </div>
+          </div>
           <div>
             <label
               htmlFor="email"
