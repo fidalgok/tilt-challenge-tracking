@@ -1,10 +1,14 @@
 import type { LoaderFunction } from "@remix-run/node";
 import { json } from "@remix-run/node";
 import { Form, Link, useLoaderData, Outlet, NavLink } from "@remix-run/react";
+import { Fragment } from "react";
 
 import { requireUserId } from "../session.server";
 import { useUser } from "../utils";
 import { getActiveChallengesListItems } from "../models/challenge.server";
+
+import { Popover, Transition } from "@headlessui/react"
+import { MenuIcon, XIcon } from "@heroicons/react/outline"
 
 type LoaderData = {
   challengeListItems: Awaited<ReturnType<typeof getActiveChallengesListItems>>;
@@ -40,33 +44,98 @@ export default function ChallengesPage() {
         </Form>
       </header>
 
-      <main className="flex flex-col sm:flex-row h-full bg-white">
-        <div className="sm:h-full  sm:max-w-sm border-r bg-gray-50">
-          <Link to="join" className="block p-4 text-xl text-blue-500">
-            + Join Other Active Challenges
-          </Link>
+      <main className="flex flex-col md:flex-row h-full bg-white">
+        <Popover className="relative px-4 md:px-0">
+          <div className="mr-2 my-2 md:hidden">
+            <Popover.Button className="bg-white rounded-md p-2 inline-flex items-center justify-center text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500">
+              <span className="sr-only">Open menu</span>
+              <MenuIcon className="h-6 w-6" aria-hidden="true" />
+            </Popover.Button>
+          </div>
+          <Popover.Group className="hidden md:h-full md:block border-r bg-gray-50">
+            <div className="  sm:max-w-sm ">
+              <Link to="join" className="block p-4 text-xl text-blue-500">
+                + Join Other Active Challenges
+              </Link>
 
-          <hr />
+              <hr />
 
-          {data.challengeListItems.length === 0 ? (
-            <p className="p-4">No challenges yet</p>
-          ) : (
-            <ol>
-              {data.challengeListItems.map((challenge) => (
-                <li key={challenge.id}>
-                  <NavLink
-                    className={({ isActive }) =>
-                      `block border-b p-4 text-xl ${isActive ? "bg-white" : ""}`
-                    }
-                    to={challenge.id}
-                  >
-                    💪 {challenge.title}
-                  </NavLink>
-                </li>
-              ))}
-            </ol>
-          )}
-        </div>
+              {data.challengeListItems.length === 0 ? (
+                <p className="p-4">No challenges yet</p>
+              ) : (
+                <ol>
+                  {data.challengeListItems.map((challenge) => (
+                    <li key={challenge.id}>
+                      <NavLink
+                        className={({ isActive }) =>
+                          `block border-b p-4 text-xl ${isActive ? "bg-white" : ""}`
+                        }
+                        to={challenge.id}
+                      >
+                        🏆 {challenge.title}
+                      </NavLink>
+                    </li>
+                  ))}
+                </ol>
+              )}
+            </div>
+          </Popover.Group>
+          <Transition
+            as={Fragment}
+            enter="duration-200 ease-out"
+            enterFrom="opacity-0 scale-95"
+            enterTo="opacity-100 scale-100"
+            leave="duration-100 ease-in"
+            leaveFrom="opacity-100 scale-100"
+            leaveTo="opacity-0 scale-95"
+          >
+            <Popover.Panel focus className="absolute top-0 inset-x-0 p-2 transition transform origin-top-right md:hidden">
+              <div className="rounded-lg shadow-lg ring-1 ring-black ring-opacity-5 bg-white divide-y-2 divide-gray-50">
+                <div className="pt-5 pb-6 px-2">
+                  <div className="flex items-center justify-between">
+
+                    <Popover.Button className="bg-white rounded-md p-2 inline-flex items-center justify-center text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500">
+                      <span className="sr-only">Close menu</span>
+                      <XIcon className="h-6 w-6" aria-hidden="true" />
+                    </Popover.Button>
+                  </div>
+                </div>
+                <div className="mt-2">
+                  <nav className="grid gap-y-8">
+                    <div className="sm:h-full  sm:max-w-sm border-r bg-gray-50">
+                      <Link to="join" className="block p-4 text-xl text-blue-500">
+                        + Join Other Active Challenges
+                      </Link>
+
+                      <hr />
+
+                      {data.challengeListItems.length === 0 ? (
+                        <p className="p-4">No challenges yet</p>
+                      ) : (
+                        <ol>
+                          {data.challengeListItems.map((challenge) => (
+                            <li key={challenge.id}>
+                              <NavLink
+                                className={({ isActive }) =>
+                                  `block border-b p-4 text-xl ${isActive ? "bg-white" : ""}`
+                                }
+                                to={challenge.id}
+                              >
+                                🏆 {challenge.title}
+                              </NavLink>
+                            </li>
+                          ))}
+                        </ol>
+                      )}
+                    </div>
+                  </nav>
+                </div>
+              </div>
+
+            </Popover.Panel>
+          </Transition>
+
+        </Popover>
 
         <div className="flex-1 p-6">
           <Outlet />
