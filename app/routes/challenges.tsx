@@ -22,11 +22,14 @@ export default function ChallengesPage() {
 
   return (
     <div className="flex h-full min-h-screen flex-col">
-      <header className="flex items-center justify-between bg-slate-800 p-4 text-white">
-        <h1 className="text-3xl font-bold">
-          <Link to=".">Challenges</Link>
-        </h1>
-        <p>{user.email}</p>
+      <header className="flex items-center justify-between  bg-slate-800 p-4 text-white">
+        <div className="flex flex-col sm:items-center sm:flex-row sm:justify-between">
+
+          <h1 className="text-3xl font-bold sm:mr-8">
+            <Link to=".">Challenges</Link>
+          </h1>
+          <p>{user.email}</p>
+        </div>
         <Form action="/logout" method="post">
           <button
             type="submit"
@@ -37,8 +40,8 @@ export default function ChallengesPage() {
         </Form>
       </header>
 
-      <main className="flex h-full bg-white">
-        <div className="h-full w-80 border-r bg-gray-50">
+      <main className="flex flex-col sm:flex-row h-full bg-white">
+        <div className="sm:h-full  sm:max-w-sm border-r bg-gray-50">
           <Link to="join" className="block p-4 text-xl text-blue-500">
             + Join Other Active Challenges
           </Link>
@@ -57,7 +60,7 @@ export default function ChallengesPage() {
                     }
                     to={challenge.id}
                   >
-                    📝 {challenge.title}
+                    💪 {challenge.title}
                   </NavLink>
                 </li>
               ))}

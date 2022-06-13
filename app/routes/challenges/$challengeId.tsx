@@ -75,38 +75,38 @@ export default function ChallengeDetailsPage() {
 
     return (
         <>
-            <div className="mb-8">
+            <div className="mb-2 sm:mb-8">
                 <h3 className="text-3xl font-bold">{data.challenge.title}</h3>
                 <p className="py-6">{data.challenge.description}</p>
 
 
             </div>
-            <div className="grid grid-cols-[1fr_minmax(200px,_max-content)]">
+            <div className="grid gap-8 [@media(min-width:980px)]:grid-cols-[1fr_minmax(200px,_max-content)]">
 
                 <div>
 
-                    <div className="flex py-4 mb-8">
+                    <div className="flex  py-4 mb-8">
 
-                        <div className="w-1/3">
-                            <h4 className="text-center text-2xl font-bold mb-3">{data.challenge.activity[0].unit} Completed</h4>
-                            <p className="text-center text-4xl font-extrabold">{data.totalSteps}</p>
+                        <div className="flex flex-col w-1/3">
+                            <h4 className="grow text-center md:text-2xl font-bold mb-3">{data.challenge.activity[0].unit} Completed</h4>
+                            <p className="text-center md:text-4xl font-extrabold">{data.totalSteps}</p>
                         </div>
-                        <div className="w-1/3">
-                            <h4 className="text-center text-2xl font-bold mb-3">{data.challenge.activity[0].unit} Left</h4>
-                            <p className="text-center text-4xl font-extrabold">{(data.challenge.activity[0]?.amount || 0) - totalSteps}</p>
+                        <div className="flex flex-col w-1/3">
+                            <h4 className="grow text-center md:text-2xl font-bold mb-3">{data.challenge.activity[0].unit} Left</h4>
+                            <p className="text-center md:text-4xl font-extrabold">{(data.challenge.activity[0]?.amount || 0) - totalSteps}</p>
                         </div>
-                        <div className="w-1/3">
-                            <h4 className="text-center text-2xl font-bold mb-3">Days Left</h4>
-                            <p className="text-center text-4xl font-extrabold">{daysBetween(new Date(), data.challenge.endDate) + 1}</p>
+                        <div className="flex flex-col w-1/3">
+                            <h4 className="grow text-center md:text-2xl font-bold mb-3">Days Left</h4>
+                            <p className="text-center md:text-4xl font-extrabold">{daysBetween(new Date(), data.challenge.endDate) + 1}</p>
                         </div>
                     </div>
 
                     <Outlet />
                 </div>
-                <div className="self-start pt-4 px-2 border rounded border-slate-100">
+                <div className="col-start-1 row-start-1 [@media(min-width:980px)]:col-start-auto [@media(min-width:980px)]:row-start-auto self-start pt-4 px-2 border rounded border-slate-100">
                     <h4 className="text-2xl font-bold">Leaderboard</h4>
                     <hr />
-                    {data.leaderboard.map((entry, index) => (
+                    {data.leaderboard.slice(0, 5).map((entry, index) => (
                         <div key={`${entry.name}-${entry.steps}`} className="flex border-b border-slate-100 py-3 last:border-b-0">
                             <div className="mr-4 flex items-center text-lg font-bold">{index + 1}</div>
                             <div className="grow flex flex-col">
