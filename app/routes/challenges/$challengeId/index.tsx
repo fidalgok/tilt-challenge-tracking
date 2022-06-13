@@ -86,10 +86,20 @@ export default function ChallengeEntries() {
                             return (
                                 <tr key={day} className="hover:bg-slate-50 border-b border-slate-100 " >
                                     <td className="p-3">{day}</td>
-                                    <td className="p-3 w-fit">{formattedDate}</td>
-                                    <td className="flex flex-col align-middle p-3">
-                                        <span>{entry?.amount || " "}</span>
-                                        {entry?.notes && (<span className="mt-2 text-slate-500">{entry?.notes || " "}</span>)}
+                                    <td className="p-3 w-fit">
+                                        <div className="flex flex-col items-start">
+
+                                            <span className="self-center inline-block">{month}</span>
+                                            <span className="self-center inline-block mt-2">{day}</span>
+
+                                        </div>
+                                    </td>
+                                    <td className="p-3">
+                                        <div className="flex flex-col items-start ">
+
+                                            <div>{entry?.amount || " "}</div>
+                                            {entry?.notes && (<div><span className="inline-block text-sm mt-[10px] text-slate-500">{entry?.notes || " "}</span></div>)}
+                                        </div>
 
                                     </td>
                                     {!entry && (
@@ -99,21 +109,23 @@ export default function ChallengeEntries() {
                                     )}
                                     {entry && (
                                         <td className="p-3 ">
+                                            <div className="flex flex-col md:flex-row items-start justify-between">
 
-                                            <Link className="block lg:inline px-2 mb-3 lg:mr-3 lg:mb-0 " to={`entries/${entry.id}/edit`}>Edit</Link>
-                                            <Form
-                                                method="post"
-                                                className="inline px-2"
-                                            >
-                                                <input type="hidden" name="id" value={entry.id} />
-                                                <button
-                                                    type="submit"
-                                                    name="_action"
-                                                    value="delete"
+                                                <Link className="block  md:inline-block px-2 mb-3 md:mr-3 md:mb-0 " to={`entries/${entry.id}/edit`}>Edit</Link>
+                                                <Form
+                                                    method="post"
+                                                    className="inline-block  px-2"
                                                 >
-                                                    {busy ? "Deleting" : "Delete"}
-                                                </button>
-                                            </Form>
+                                                    <input type="hidden" name="id" value={entry.id} />
+                                                    <button
+                                                        type="submit"
+                                                        name="_action"
+                                                        value="delete"
+                                                    >
+                                                        {busy ? "Deleting" : "Delete"}
+                                                    </button>
+                                                </Form>
+                                            </div>
                                             {actionData?.errors?.id && (
                                                 <div className="text-red-500">
                                                     {actionData.errors.id}
