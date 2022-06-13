@@ -114,7 +114,7 @@ export default function ChallengeDetailsPage() {
                         <div className="flex flex-col justify-between md:flex-row xl:flex-col">
 
                             <div className="flex flex-col  py-3 px-4 mb-4">
-                                <h4 className=" text-center text-xl lg:text-2xl font-bold mb-3">{capitalize(data.challenge.activity[0].unit || ""} Completed</h4>
+                                <h4 className=" text-center text-xl lg:text-2xl font-bold mb-3">{capitalize(data.challenge.activity[0].unit || "")} Completed</h4>
                                 <p className="text-center text-xl lg:text-4xl font-extrabold">{data.totalSteps}</p>
                             </div>
                             <div className="flex flex-col py-3 px-4 mb-4">
