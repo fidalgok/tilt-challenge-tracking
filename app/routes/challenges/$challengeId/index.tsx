@@ -64,9 +64,9 @@ export default function ChallengeEntries() {
     return (
         <div >
 
-            <h1>Challenge Entries</h1>
+            <h3 className="font-bold text-lg md:text-xl">Challenge Entries</h3>
             <table className="w-full border-separate border-spacing-0">
-                <thead >
+                <thead>
                     <tr>
 
                         <th className="sticky top-0 bg-slate-100 border-b border-slate-300 text-left p-3">Day</th>
@@ -90,7 +90,7 @@ export default function ChallengeEntries() {
                                         <div className="flex flex-col items-start">
 
                                             <span className="self-center inline-block">{month}</span>
-                                            <span className="self-center inline-block mt-2">{day}</span>
+                                            <span className="self-center inline-block mt-2">{dayOfMonth}</span>
 
                                         </div>
                                     </td>
