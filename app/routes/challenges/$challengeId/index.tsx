@@ -87,9 +87,9 @@ export default function ChallengeEntries() {
                                 <tr key={day} className="hover:bg-slate-50 border-b border-slate-100 " >
                                     <td className="p-3">{day}</td>
                                     <td className="p-3 w-fit">{formattedDate}</td>
-                                    <td className="flex flex-col p-3">
+                                    <td className="flex flex-col align-middle p-3">
                                         <span>{entry?.amount || " "}</span>
-                                        <span className="mt-2 text-slate-500">{entry?.notes || " "}</span>
+                                        {entry?.notes && (<span className="mt-2 text-slate-500">{entry?.notes || " "}</span>)}
 
                                     </td>
                                     {!entry && (
@@ -98,9 +98,9 @@ export default function ChallengeEntries() {
                                         </td>
                                     )}
                                     {entry && (
-                                        <td className="p-3">
+                                        <td className="p-3 ">
 
-                                            <Link className="px-2 mb-3 sm:mr-3 sm:mb-0" to={`entries/${entry.id}/edit`}>Edit</Link>
+                                            <Link className="block lg:inline px-2 mb-3 lg:mr-3 lg:mb-0 " to={`entries/${entry.id}/edit`}>Edit</Link>
                                             <Form
                                                 method="post"
                                                 className="inline px-2"
