@@ -1,4 +1,4 @@
-import type { Challenge, Prisma, User, ChallengeActivity, Entry } from "@prisma/client";
+import type { Challenge, Prisma, User, ChallengeActivity, Entry, Activity } from "@prisma/client";
 
 import { prisma } from "~/db.server";
 
@@ -16,6 +16,56 @@ export function getChallenge({ id, userId }: Pick<Challenge, "id"> & { userId: U
 
   });
 }
+
+export function createChallenge({ title, description, startDate, endDate, isPublic, published }: Pick<Challenge, "title" | "description" | "startDate" | "endDate" | "published"> & { isPublic: Challenge["public"] }) {
+  return prisma.challenge.create({
+    data: {
+      title,
+      description,
+      startDate,
+      endDate,
+      public: isPublic,
+      published
+    },
+  });
+
+
+}
+
+export function createChallengeActivity({ challengeId, amount, trackType, unit, activityName }: {
+  challengeId: Challenge["id"],
+  amount: ChallengeActivity["amount"],
+  trackType: ChallengeActivity["trackType"],
+  unit: ChallengeActivity["unit"],
+  activityName: Activity["name"]
+}) {
+
+
+  return prisma.challengeActivity.create({
+    data: {
+      challenge: {
+        connect: {
+          id: challengeId,
+        }
+      },
+      amount,
+      trackType,
+      unit,
+      activity: {
+        connectOrCreate: {
+          where: {
+            name: activityName,
+          },
+          create: {
+            name: activityName,
+          }
+        }
+      },
+
+    }
+  })
+}
+
 export function getOpenChallenges({ userId }: { userId: User["id"] }) {
 
   return prisma.challenge.findMany({

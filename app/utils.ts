@@ -1,5 +1,5 @@
 import { useMatches } from "@remix-run/react";
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 
 import type { User } from "~/models/user.server";
 
@@ -98,4 +98,37 @@ export function getUTCMonth(date: number): number {
 
 export function classNames(...classes: string[]): string {
   return classes.filter(Boolean).join(' ')
+}
+
+// HOOkS to the window resize event to update the window width and height
+// Thanks: 
+export function useWindowSize() {
+  const hasWindow = typeof window !== 'undefined';
+
+  function getWindowDimensions() {
+    const width = hasWindow ? window.innerWidth : null;
+    const height = hasWindow ? window.innerHeight : null;
+
+    return {
+      width,
+      height,
+    };
+  }
+
+  const [windowDimensions, setWindowDimensions] = useState(getWindowDimensions());
+
+  useEffect(() => {
+    if (hasWindow) {
+      function handleResize() {
+        setWindowDimensions(getWindowDimensions());
+      }
+
+      window.addEventListener('resize', handleResize);
+      return () => window.removeEventListener('resize', handleResize);
+    }
+  }, [hasWindow]);
+
+
+
+  return windowDimensions;
 }

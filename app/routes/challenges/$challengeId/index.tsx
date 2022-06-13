@@ -64,19 +64,18 @@ export default function ChallengeEntries() {
     return (
         <div >
 
-            <h1>Challenge Entries</h1>
-            <table className="border-collapse grid gap-6 grid-cols-[min-content_max-content_1fr_2fr_max-content] grid-flow-row">
-                <thead className="contents">
-                    <tr className="contents">
+            <h3 className="font-bold text-lg md:text-xl">Challenge Entries</h3>
+            <table className="w-full border-separate border-spacing-0">
+                <thead>
+                    <tr>
 
-                        <th className="sticky top-0 bg-white text-left py-3">Day</th>
-                        <th className="sticky top-0 bg-white text-left py-3">Date</th>
-                        <th className="sticky top-0 bg-white text-left py-3">Steps</th>
-                        <th className="sticky top-0 bg-white text-left py-3">Notes</th>
-                        <th className="sticky top-0 bg-white text-left py-3">Actions</th>
+                        <th className="sticky top-0 bg-slate-100 border-b border-slate-300 text-left p-3">Day</th>
+                        <th className="sticky top-0 bg-slate-100 border-b border-slate-300 text-left p-3">Date</th>
+                        <th className="sticky top-0 bg-slate-100 border-b border-slate-300 text-left p-3 w-full">Steps</th>
+                        <th className="sticky top-0 bg-slate-100 border-b border-slate-300 text-left p-3">Actions</th>
                     </tr>
                 </thead>
-                <tbody className="contents">
+                <tbody >
                     {
                         challengeDaysArray.map(({ date, day, dateAsUTCString, formattedDate }) => {
 
@@ -85,33 +84,48 @@ export default function ChallengeEntries() {
                             const month = formattedDate.split(' ')[0];
                             const dayOfMonth = formattedDate.split(' ')[1];
                             return (
-                                <tr key={day} className="contents hover:bg-slate-100" >
-                                    <td>{day}</td>
-                                    <td>{formattedDate}</td>
-                                    <td>{entry?.amount || " "}</td>
-                                    <td>{entry?.notes || " "}</td>
+                                <tr key={day} className="hover:bg-slate-50 border-b border-slate-100 " >
+                                    <td className="p-3">{day}</td>
+                                    <td className="p-3 w-fit">
+                                        <div className="flex flex-col items-start">
+
+                                            <span className="self-center inline-block">{month}</span>
+                                            <span className="self-center inline-block mt-2">{dayOfMonth}</span>
+
+                                        </div>
+                                    </td>
+                                    <td className="p-3">
+                                        <div className="flex flex-col items-start ">
+
+                                            <div>{entry?.amount || " "}</div>
+                                            {entry?.notes && (<div><span className="inline-block text-sm mt-[10px] text-slate-500">{entry?.notes || " "}</span></div>)}
+                                        </div>
+
+                                    </td>
                                     {!entry && (
-                                        <td>
+                                        <td className="p-3">
                                             <Link className="px-2" to={`entries/new?month=${month}&day=${dayOfMonth}`}>Add</Link>
                                         </td>
                                     )}
                                     {entry && (
-                                        <td>
+                                        <td className="p-3 ">
+                                            <div className="flex flex-col md:flex-row items-start justify-between">
 
-                                            <Link className="px-2 mr-3" to={`entries/${entry.id}/edit`}>Edit</Link>
-                                            <Form
-                                                method="post"
-                                                className="inline px-2"
-                                            >
-                                                <input type="hidden" name="id" value={entry.id} />
-                                                <button
-                                                    type="submit"
-                                                    name="_action"
-                                                    value="delete"
+                                                <Link className="block  md:inline-block px-2 mb-3 md:mr-3 md:mb-0 " to={`entries/${entry.id}/edit`}>Edit</Link>
+                                                <Form
+                                                    method="post"
+                                                    className="inline-block  px-2"
                                                 >
-                                                    {busy ? "Deleting" : "Delete"}
-                                                </button>
-                                            </Form>
+                                                    <input type="hidden" name="id" value={entry.id} />
+                                                    <button
+                                                        type="submit"
+                                                        name="_action"
+                                                        value="delete"
+                                                    >
+                                                        {busy ? "Deleting" : "Delete"}
+                                                    </button>
+                                                </Form>
+                                            </div>
                                             {actionData?.errors?.id && (
                                                 <div className="text-red-500">
                                                     {actionData.errors.id}

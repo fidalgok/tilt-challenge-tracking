@@ -43,7 +43,7 @@ export const loader: LoaderFunction = async ({ request, params }) => {
 
 export default function JoinOpenChallengesPage() {
     const data = useLoaderData() as LoaderData;
-    console.log(data)
+
 
     return (
         <div>
