@@ -18,7 +18,7 @@ type LoaderData = {
 export const loader: LoaderFunction = async ({ request }) => {
     const userId = await requireUserId(request);
     const user = await getUserById(userId);
-    console.log(user)
+
     if (!user) {
         throw redirect("/challenges");
     }

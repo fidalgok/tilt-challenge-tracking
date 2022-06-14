@@ -17,6 +17,17 @@ export async function getAdminUserById(id: User["id"]) {
   return prisma.user.findFirst({ where: { AND: { id, role: { equals: "ADMIN" } } }, include: { profile: true } })
 }
 
+export async function getUsers() {
+  return prisma.user.findMany({
+    select: {
+      id: true,
+      email: true,
+      role: true,
+      profile: true,
+    }
+  });
+}
+
 export async function createUser(
   firstName: string,
   lastName: string,
@@ -41,6 +52,19 @@ export async function createUser(
       },
     },
   });
+}
+
+export async function updateUserRole(id: User["id"], role: "ADMIN" | "MEMBER") {
+  return prisma.user.update({
+    data: {
+      role
+    },
+    where: { id }
+  })
+}
+
+export async function updateUserAuthorizations({ id, authList }: { id: User["id"], authList: string[] }) {
+  // TODO: create this after updating schema.
 }
 
 export async function deleteUserByEmail(email: User["email"]) {
