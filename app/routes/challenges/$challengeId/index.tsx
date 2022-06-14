@@ -5,6 +5,9 @@ import { ChallengeWithActivities, deleteEntry } from "~/models/challenge.server"
 import { requireUser } from "~/session.server";
 import { daysBetween, useMatchesData, UTCFormattedDate } from "~/utils";
 
+import { PlusIcon } from '@heroicons/react/outline'
+import { format, isToday } from "date-fns";
+
 export type challengeMatchesData = {
     challenge?: ChallengeWithActivities,
     entries?: Entry[],
@@ -37,6 +40,8 @@ export const action: ActionFunction = async ({ request }) => {
     return null;
 }
 
+
+
 export default function ChallengeEntries() {
     const actionData = useActionData() as ActionData;
     let transition = useTransition();
@@ -45,8 +50,9 @@ export default function ChallengeEntries() {
     const { challenge, entries } = matches as challengeMatchesData;
     const challengeStart = new Date(challenge?.startDate || "now");
     const challengeEnd = new Date(challenge?.endDate || "now");
-
-
+    const today = new Date();
+    const todayMonth = format(today, 'MMM');
+    console.log(today, isToday(today))
     const challengeDays = daysBetween(challengeStart, challengeEnd);
     // create an empty array of challengeDays with an index for the day and the corresponding date    
     const challengeDaysArray = Array.from({ length: challengeDays }, (_, i) =>
@@ -64,7 +70,15 @@ export default function ChallengeEntries() {
     return (
         <div >
 
-            <h3 className="font-bold text-lg md:text-xl">Challenge Entries</h3>
+            <div className="flex justify-between mb-3">
+                <h3 className="font-bold text-lg md:text-xl ">Challenge Entries</h3>
+                <Link to={`entries/new?month=${todayMonth}&day=${today.getUTCDate()}`}>
+                    <div className="flex items-center">
+
+                        <PlusIcon className="h-5 w-5 text-slate-500 inline" />{" "} <span>Quick Add For Today</span>
+                    </div>
+                </Link>
+            </div>
             <table className="w-full border-separate border-spacing-0">
                 <thead>
                     <tr>
@@ -84,8 +98,16 @@ export default function ChallengeEntries() {
                             const month = formattedDate.split(' ')[0];
                             const dayOfMonth = formattedDate.split(' ')[1];
                             return (
-                                <tr key={day} className="hover:bg-slate-50 border-b border-slate-100 " >
-                                    <td className="p-3">{day}</td>
+                                <tr
+                                    id={`${month}-${dayOfMonth}`}
+                                    key={`${month}-${dayOfMonth}`}
+                                    className="hover:bg-slate-50 border-b border-slate-100"
+                                >
+                                    <td className="p-3">{isToday(new Date(dateAsUTCString)) ?
+                                        (<span className="w-16 h-16 flex items-center justify-center bg-slate-800 text-white aspect-square rounded-full ">{day}</span>) :
+                                        (<span className="w-16 h-16 flex items-center justify-center aspect-square rounded-full ">{day}</span>)
+                                    }
+                                    </td>
                                     <td className="p-3 w-fit">
                                         <div className="flex flex-col items-start">
 

@@ -8,6 +8,8 @@ import { requireUserId } from "~/session.server";
 
 import type { challengeMatchesData } from "~/routes/challenges/$challengeId/index";
 
+
+
 type ActionData = {
     errors?: {
         amount?: string;
@@ -34,6 +36,7 @@ const months: { [key: string]: number } = {
     "Nov": 11,
     "Dec": 12,
 }
+
 
 export const action: ActionFunction = async ({ request, params }) => {
     const userId = await requireUserId(request);
