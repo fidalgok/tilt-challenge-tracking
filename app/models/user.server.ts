@@ -13,6 +13,10 @@ export async function getUserByEmail(email: User["email"]) {
   return prisma.user.findUnique({ where: { email } });
 }
 
+export async function getAdminUserById(id: User["id"]) {
+  return prisma.user.findFirst({ where: { AND: { id, role: { equals: "ADMIN" } } }, include: { profile: true } })
+}
+
 export async function createUser(
   firstName: string,
   lastName: string,
