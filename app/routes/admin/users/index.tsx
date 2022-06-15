@@ -36,20 +36,20 @@ export default function AdminUsersIndexPage() {
                 </thead>
                 <tbody>
 
-                </tbody>
-                {users.map(user => (
-                    <tr key={user.id} className="hover:bg-slate-50 border-b border-slate-100">
-                        <td className="p-3">
-                            <input name="userSelect" type={"checkbox"} value={user.id} />
-                        </td>
-                        <td className="p-3">{user.profile?.firstName}</td>
-                        <td className="p-3">{user.profile?.lastName}</td>
-                        <td className="p-3">{user.email}</td>
-                        <td className="p-3">{user.profile?.gym}</td>
-                        <td className="p-3">{user.role}</td>
+                    {users.map(user => (
+                        <tr key={user.id} className="hover:bg-slate-50 border-b border-slate-100">
+                            <td className="p-3">
+                                <input name="userSelect" type={"checkbox"} value={user.id} />
+                            </td>
+                            <td className="p-3">{user.profile?.firstName}</td>
+                            <td className="p-3">{user.profile?.lastName}</td>
+                            <td className="p-3">{user.email}</td>
+                            <td className="p-3">{user.profile?.gym}</td>
+                            <td className="p-3">{user.role}</td>
 
-                    </tr>
-                ))}
+                        </tr>
+                    ))}
+                </tbody>
             </table>
 
         </div>
