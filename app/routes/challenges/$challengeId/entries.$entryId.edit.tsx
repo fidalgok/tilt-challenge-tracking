@@ -111,6 +111,8 @@ export const action: ActionFunction = async ({ request, params }) => {
 
     });
 
+    console.log(challengeEntry)
+
     return redirect(`/challenges/${challengeId}`);
 }
 
