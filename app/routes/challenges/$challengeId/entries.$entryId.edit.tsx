@@ -9,7 +9,7 @@ import { requireUserId } from "~/session.server";
 
 import type { challengeMatchesData } from "~/routes/challenges/$challengeId/index";
 import invariant from "tiny-invariant";
-import { format, getDate } from "date-fns";
+import { format, getDate, getYear } from "date-fns";
 
 
 type ActionData = {
@@ -51,6 +51,7 @@ export const action: ActionFunction = async ({ request, params }) => {
     const formData = await request.formData();
     const amount = Number(formData.get("amount"));
     const notes = formData.get("notes");
+    const year = formData.get("year");
     const month = formData.get("month");
     const day = formData.get("day");
     if (typeof month !== 'string' || month.length == 0) {
@@ -60,7 +61,8 @@ export const action: ActionFunction = async ({ request, params }) => {
         );
     }
 
-    const date = new Date(`${new Date().getUTCFullYear()}/${months[month]}/${day}`);
+    const date = new Date(`${year}/${months[month]}/${day}`).toISOString();
+
     //hidden fields
     const challengeId = params.challengeId;
     const entryId = params.entryId;
@@ -107,7 +109,7 @@ export const action: ActionFunction = async ({ request, params }) => {
         notes,
         challengeId,
         activityId,
-        date
+        date: new Date(date)
 
     });
 
@@ -209,6 +211,7 @@ export default function EditChallengeEntryPage() {
                 )}
             </div>
             <div>
+                <input type={"hidden"} name="year" value={getYear(new Date(loaderData.entry.date))} />
                 <input type="hidden" name="month" value={format(new Date(loaderData.entry.date), "MMM") || ""} />
                 <input type="hidden" name="day" value={getDate(new Date(loaderData.entry.date)) || ""} />
                 <input type="hidden" name="activityId" value={matchesData.challenge?.activity[0].activityId || ""} />
