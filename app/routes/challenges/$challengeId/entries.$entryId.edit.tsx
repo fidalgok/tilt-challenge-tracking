@@ -66,7 +66,7 @@ export const action: ActionFunction = async ({ request, params }) => {
     const entryId = params.entryId;
     const activityId = formData.get("activityId");
 
-    console.log({ userId, amount, notes, date, challengeId, activityId });
+
 
     if (Number.isNaN(amount) || amount <= 0) {
         return json<ActionData>(
@@ -189,7 +189,7 @@ export default function EditChallengeEntryPage() {
                     <textarea
                         ref={notesRef}
                         name="notes"
-
+                        defaultValue={loaderData?.entry?.notes || ""}
                         className="flex-1 rounded-md border-2 focus:border-blue-500 px-2 text-lg leading-loose"
                         aria-invalid={actionData?.errors?.notes ? true : undefined}
                         aria-errormessage={actionData?.errors?.notes ? "notes-error" : undefined}
@@ -197,7 +197,7 @@ export default function EditChallengeEntryPage() {
                         placeholder="Ex. 20 inch box, body weight"
 
                     >
-                        {loaderData.entry?.notes}
+
                     </textarea>
                 </label>
                 {actionData?.errors?.notes && (

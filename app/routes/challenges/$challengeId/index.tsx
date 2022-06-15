@@ -5,7 +5,7 @@ import { ChallengeWithActivities, deleteEntry } from "~/models/challenge.server"
 import { requireUser } from "~/session.server";
 import { daysBetween, useMatchesData, UTCFormattedDate } from "~/utils";
 
-import { PlusIcon } from '@heroicons/react/outline'
+import { PlusIcon, PencilIcon } from '@heroicons/react/outline'
 import { format, isToday } from "date-fns";
 
 export type challengeMatchesData = {
@@ -52,7 +52,8 @@ export default function ChallengeEntries() {
     const challengeEnd = new Date(challenge?.endDate || "now");
     const today = new Date();
     const todayMonth = format(today, 'MMM');
-    console.log(today, isToday(today))
+    const entryForToday = findEntrybyDate(new Date());
+
     const challengeDays = daysBetween(challengeStart, challengeEnd);
     // create an empty array of challengeDays with an index for the day and the corresponding date    
     const challengeDaysArray = Array.from({ length: challengeDays }, (_, i) =>
@@ -67,17 +68,35 @@ export default function ChallengeEntries() {
 
     }));
 
+    function findEntrybyDate(date: Date): Entry | undefined {
+        const entry = entries?.find(e => UTCFormattedDate(new Date(e.date)) === UTCFormattedDate(date));
+        return entry;
+    }
+
     return (
         <div >
 
             <div className="flex justify-between mb-3">
                 <h3 className="font-bold text-lg md:text-xl ">Challenge Entries</h3>
-                <Link to={`entries/new?month=${todayMonth}&day=${today.getUTCDate()}`}>
-                    <div className="flex items-center">
+                {entryForToday ?
+                    (
+                        <Link to={`entries/${entryForToday.id}/edit`}>
+                            <div className="flex items-center">
 
-                        <PlusIcon className="h-5 w-5 text-slate-500 inline" />{" "} <span>Quick Add For Today</span>
-                    </div>
-                </Link>
+                                <PencilIcon className="h-5 w-5 text-slate-500 inline" />{" "} <span>Quick Edit For Today</span>
+                            </div>
+                        </Link>
+                    ) :
+                    (
+                        <Link to={`entries/new?month=${todayMonth}&day=${today.getUTCDate()}`}>
+                            <div className="flex items-center">
+
+                                <PlusIcon className="h-5 w-5 text-slate-500 inline" />{" "} <span>Quick Add For Today</span>
+                            </div>
+                        </Link>
+                    )
+                }
+
             </div>
             <table className="w-full border-separate border-spacing-0">
                 <thead>
