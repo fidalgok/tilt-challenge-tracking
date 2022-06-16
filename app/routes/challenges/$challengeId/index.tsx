@@ -72,8 +72,14 @@ export default function ChallengeEntries() {
     }));
 
     function findEntrybyDate(date: Date): Entry | undefined {
-        if (date.getHours() > 20) {
-            date.setHours(19)
+        // date is coming from the user input, so we need to strip the timezone because
+        // the date stored in the DB is utc and the user input could be different
+        // plus, depending on where the user is, the date could bump up against the next day in utc land which is not great...
+        const hoursInDay = 24;
+        const localOffset = date.getTimezoneOffset() / 60;
+        const maxSafeTime = hoursInDay - localOffset;
+        if (date.getHours() > maxSafeTime) {
+            date.setHours(maxSafeTime - 1);
         }
         const entry = entries?.find(e => stripTimeZone(new Date(e.date).toISOString()) === stripTimeZone(date.toISOString()));
         return entry;
