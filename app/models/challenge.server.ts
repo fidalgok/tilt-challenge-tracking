@@ -92,6 +92,13 @@ export function getActiveChallengesListItems({ userId }: { userId: User["id"] })
   });
 }
 
+export async function getChallengeActivityEntries({ challengeId, activityId }: { challengeId: Challenge["id"], activityId: Activity["id"] }) {
+  return prisma.challengeActivity.findFirst({
+    where: { challenge: { id: challengeId }, activity: { id: activityId } },
+    include: { entries: true },
+  })
+}
+
 export function getChallengeEntries({ id, userId }: Pick<Challenge, "id"> & { userId: User["id"] }) {
   return prisma.user.findMany({
     where: { id: userId, entries: { some: { challengeId: id } } },
