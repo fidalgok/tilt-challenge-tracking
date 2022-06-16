@@ -131,12 +131,12 @@ export const loader: LoaderFunction = async ({ request, params }) => {
 export default function EditChallengeEntryPage() {
     const actionData = useActionData() as ActionData;
     const loaderData = useLoaderData() as LoaderData;
-
+    console.log(loaderData.entry);
 
     const month = format(new Date(loaderData.entry.date), "MMM");
     const day = new Date(loaderData.entry.date).getUTCDate();
     const activityDate = new Date(loaderData.entry.date);
-    const updatedDate = new Date(activityDate.getFullYear(), activityDate.getUTCMonth(), activityDate.getUTCDate());
+    const updatedDate = new Date(activityDate.getFullYear(), activityDate.getUTCMonth() + 1, activityDate.getUTCDate());
     const matches = useMatches();
     const params = useParams();
 
