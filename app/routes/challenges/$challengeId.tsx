@@ -286,7 +286,7 @@ export function CatchBoundary() {
     if (caught.status === 404) {
         return <div>Challenge not found</div>;
     }
-
-    throw new Error(`Unexpected caught response with status: ${caught.status}`);
+    console.error(caught.data)
+    throw new Error(`Unexpected caught response with status: ${caught.status} ${JSON.stringify(caught.data, null, 2)}`);
 }
 

@@ -3,7 +3,7 @@ import { Form, Link, useActionData, useTransition } from "@remix-run/react";
 import { ActionFunction, json } from "@remix-run/node";
 import { ChallengeWithActivities, deleteEntry } from "~/models/challenge.server";
 import { requireUser } from "~/session.server";
-import { daysBetween, useMatchesData, UTCFormattedDate } from "~/utils";
+import { daysBetween, useMatchesData, UTCFormattedDate, stripTimeZone } from "~/utils";
 
 import { PlusIcon, PencilIcon } from '@heroicons/react/outline'
 import { format, isToday } from "date-fns";
@@ -40,9 +40,7 @@ export const action: ActionFunction = async ({ request }) => {
     return null;
 }
 
-function stripTimeZone(date: string) {
-    return date.split("T")[0];
-}
+
 
 export default function ChallengeEntries() {
     const actionData = useActionData() as ActionData;
@@ -71,17 +69,33 @@ export default function ChallengeEntries() {
 
     }));
 
+
     function findEntrybyDate(date: Date): Entry | undefined {
         // date is coming from the user input, so we need to strip the timezone because
         // the date stored in the DB is utc and the user input could be different
         // plus, depending on where the user is, the date could bump up against the next day in utc land which is not great...
         const hoursInDay = 24;
         const localOffset = date.getTimezoneOffset() / 60;
-        const maxSafeTime = hoursInDay - localOffset;
-        if (date.getHours() > maxSafeTime) {
-            date.setHours(maxSafeTime - 1);
+        if (localOffset < 0) {
+            // accounts for east of UTC
+            const minSafeTime = 0 - localOffset;
+            if (date.getHours() < minSafeTime) {
+                date.setHours(minSafeTime + 1);
+            }
+        } else {
+            // accounts for west of GMT 
+            const maxSafeTime = hoursInDay - localOffset;
+            if (date.getHours() > maxSafeTime) {
+                date.setHours(maxSafeTime - 1);
+            }
         }
-        const entry = entries?.find(e => stripTimeZone(new Date(e.date).toISOString()) === stripTimeZone(date.toISOString()));
+        const entry = entries?.find(e => {
+            const parsedEntryDate = stripTimeZone(new Date(e.date).toISOString())
+            const parsedUserDate = stripTimeZone(date.toISOString())
+
+            return parsedEntryDate === parsedUserDate;
+        });
+
         return entry;
     }
 
@@ -122,19 +136,20 @@ export default function ChallengeEntries() {
                 </thead>
                 <tbody >
                     {
-                        challengeDaysArray.map(({ date, day, dateAsUTCString, formattedDate }) => {
+                        challengeDaysArray.map(({ date, day, dateAsUTCString, strippedDate, formattedDate }) => {
 
-                            const entry = findEntrybyDate(new Date(dateAsUTCString))
+                            const entry = findEntrybyDate(new Date(strippedDate))
                             const entryDate = new Date(date);
                             const month = formattedDate.split(' ')[0];
                             const dayOfMonth = formattedDate.split(' ')[1];
+
                             return (
                                 <tr
                                     id={`${month}-${dayOfMonth}`}
                                     key={`${month}-${dayOfMonth}`}
                                     className="hover:bg-slate-50 border-b border-slate-100"
                                 >
-                                    <td className="p-3">{isToday(new Date(dateAsUTCString)) ?
+                                    <td className="p-3">{isToday(new Date(strippedDate)) ?
                                         (<span className="w-16 h-16 flex items-center justify-center bg-slate-800 text-white aspect-square rounded-full ">{day}</span>) :
                                         (<span className="w-16 h-16 flex items-center justify-center aspect-square rounded-full ">{day}</span>)
                                     }
