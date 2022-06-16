@@ -72,6 +72,9 @@ export default function ChallengeEntries() {
     }));
 
     function findEntrybyDate(date: Date): Entry | undefined {
+        if (date.getHours() > 20) {
+            date.setHours(19)
+        }
         const entry = entries?.find(e => stripTimeZone(new Date(e.date).toISOString()) === stripTimeZone(date.toISOString()));
         return entry;
     }
@@ -91,7 +94,7 @@ export default function ChallengeEntries() {
                         </Link>
                     ) :
                     (
-                        <Link to={`entries/new?month=${todayMonth}&day=${today.getUTCDate()}`}>
+                        <Link to={`entries/new?month=${todayMonth}&day=${today.getDate()}`}>
                             <div className="flex items-center">
 
                                 <PlusIcon className="h-5 w-5 text-slate-500 inline" />{" "} <span>Quick Add For Today</span>
