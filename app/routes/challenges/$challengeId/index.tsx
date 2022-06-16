@@ -70,7 +70,7 @@ export default function ChallengeEntries() {
         }),
 
     }));
-    console.log(challengeDaysArray)
+
 
     function findEntrybyDate(date: Date): Entry | undefined {
         // date is coming from the user input, so we need to strip the timezone because
@@ -94,10 +94,10 @@ export default function ChallengeEntries() {
         const entry = entries?.find(e => {
             const parsedEntryDate = stripTimeZone(new Date(e.date).toISOString())
             const parsedUserDate = stripTimeZone(date.toISOString())
-            console.log({ entry: e.date, parsedEntryDate, parsedUserDate });
+
             return parsedEntryDate === parsedUserDate;
         });
-        console.log(entry)
+
         return entry;
     }
 
@@ -144,7 +144,7 @@ export default function ChallengeEntries() {
                             const entryDate = new Date(date);
                             const month = formattedDate.split(' ')[0];
                             const dayOfMonth = formattedDate.split(' ')[1];
-                            console.log(dateAsUTCString)
+
                             return (
                                 <tr
                                     id={`${month}-${dayOfMonth}`}
