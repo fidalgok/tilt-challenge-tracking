@@ -77,9 +77,18 @@ export default function ChallengeEntries() {
         // plus, depending on where the user is, the date could bump up against the next day in utc land which is not great...
         const hoursInDay = 24;
         const localOffset = date.getTimezoneOffset() / 60;
-        const maxSafeTime = hoursInDay - localOffset;
-        if (date.getHours() > maxSafeTime) {
-            date.setHours(maxSafeTime - 1);
+        if (localOffset < 0) {
+            // accounts for east of UTC
+            const minSafeTime = 0 - localOffset;
+            if (date.getHours() < minSafeTime) {
+                date.setHours(minSafeTime + 1);
+            }
+        } else {
+            // accounts for west of GMT 
+            const maxSafeTime = hoursInDay - localOffset;
+            if (date.getHours() > maxSafeTime) {
+                date.setHours(maxSafeTime - 1);
+            }
         }
         const entry = entries?.find(e => stripTimeZone(new Date(e.date).toISOString()) === stripTimeZone(date.toISOString()));
         return entry;
