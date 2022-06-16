@@ -9,7 +9,7 @@ import { requireUserId } from "~/session.server";
 
 import type { challengeMatchesData } from "~/routes/challenges/$challengeId/index";
 import invariant from "tiny-invariant";
-import { format, getDate } from "date-fns";
+import { format, getDate, getYear } from "date-fns";
 
 
 type ActionData = {
@@ -51,6 +51,7 @@ export const action: ActionFunction = async ({ request, params }) => {
     const formData = await request.formData();
     const amount = Number(formData.get("amount"));
     const notes = formData.get("notes");
+    const year = formData.get("year");
     const month = formData.get("month");
     const day = formData.get("day");
     if (typeof month !== 'string' || month.length == 0) {
@@ -60,13 +61,14 @@ export const action: ActionFunction = async ({ request, params }) => {
         );
     }
 
-    const date = new Date(`${new Date().getUTCFullYear()}/${months[month]}/${day}`);
+    const date = new Date(`${year}/${months[month]}/${day}`)
+
     //hidden fields
     const challengeId = params.challengeId;
     const entryId = params.entryId;
     const activityId = formData.get("activityId");
 
-    console.log({ userId, amount, notes, date, challengeId, activityId });
+
 
     if (Number.isNaN(amount) || amount <= 0) {
         return json<ActionData>(
@@ -107,9 +109,11 @@ export const action: ActionFunction = async ({ request, params }) => {
         notes,
         challengeId,
         activityId,
-        date
+        date: new Date(date)
 
     });
+
+    console.log(challengeEntry)
 
     return redirect(`/challenges/${challengeId}`);
 }
@@ -130,7 +134,9 @@ export default function EditChallengeEntryPage() {
 
 
     const month = format(new Date(loaderData.entry.date), "MMM");
-    const day = getDate(new Date(loaderData.entry.date));
+    const day = new Date(loaderData.entry.date).getUTCDate();
+    const activityDate = new Date(loaderData.entry.date);
+    const updatedDate = new Date(activityDate.getFullYear(), activityDate.getUTCMonth(), activityDate.getUTCDate());
     const matches = useMatches();
     const params = useParams();
 
@@ -140,7 +146,7 @@ export default function EditChallengeEntryPage() {
     const match = matches.find(match => match.pathname === `/challenges/${params.challengeId}`);
 
     const matchesData = match?.data as challengeMatchesData;
-
+    console.log({ activityDate: loaderData.entry.date, updatedDate: updatedDate.toISOString() })
     React.useEffect(() => {
         if (actionData?.errors?.amount) {
             amountRef.current?.focus();
@@ -189,7 +195,7 @@ export default function EditChallengeEntryPage() {
                     <textarea
                         ref={notesRef}
                         name="notes"
-
+                        defaultValue={loaderData?.entry?.notes || ""}
                         className="flex-1 rounded-md border-2 focus:border-blue-500 px-2 text-lg leading-loose"
                         aria-invalid={actionData?.errors?.notes ? true : undefined}
                         aria-errormessage={actionData?.errors?.notes ? "notes-error" : undefined}
@@ -197,7 +203,7 @@ export default function EditChallengeEntryPage() {
                         placeholder="Ex. 20 inch box, body weight"
 
                     >
-                        {loaderData.entry?.notes}
+
                     </textarea>
                 </label>
                 {actionData?.errors?.notes && (
@@ -207,8 +213,10 @@ export default function EditChallengeEntryPage() {
                 )}
             </div>
             <div>
+                <input type={"hidden"} name="year" value={getYear(new Date(loaderData.entry.date))} />
                 <input type="hidden" name="month" value={format(new Date(loaderData.entry.date), "MMM") || ""} />
-                <input type="hidden" name="day" value={getDate(new Date(loaderData.entry.date)) || ""} />
+                <input type="hidden" name="day" value={new Date(loaderData.entry.date).getUTCDate() || ""} />
+                <input type="hidden" name="activityDate" value={updatedDate.toISOString()} />
                 <input type="hidden" name="activityId" value={matchesData.challenge?.activity[0].activityId || ""} />
             </div>
             <div className="text-right">

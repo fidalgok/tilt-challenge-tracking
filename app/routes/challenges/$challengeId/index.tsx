@@ -5,7 +5,7 @@ import { ChallengeWithActivities, deleteEntry } from "~/models/challenge.server"
 import { requireUser } from "~/session.server";
 import { daysBetween, useMatchesData, UTCFormattedDate } from "~/utils";
 
-import { PlusIcon } from '@heroicons/react/outline'
+import { PlusIcon, PencilIcon } from '@heroicons/react/outline'
 import { format, isToday } from "date-fns";
 
 export type challengeMatchesData = {
@@ -40,7 +40,9 @@ export const action: ActionFunction = async ({ request }) => {
     return null;
 }
 
-
+function stripTimeZone(date: string) {
+    return date.split("T")[0];
+}
 
 export default function ChallengeEntries() {
     const actionData = useActionData() as ActionData;
@@ -52,13 +54,15 @@ export default function ChallengeEntries() {
     const challengeEnd = new Date(challenge?.endDate || "now");
     const today = new Date();
     const todayMonth = format(today, 'MMM');
-    console.log(today, isToday(today))
+    const entryForToday = findEntrybyDate(new Date());
+
     const challengeDays = daysBetween(challengeStart, challengeEnd);
     // create an empty array of challengeDays with an index for the day and the corresponding date    
     const challengeDaysArray = Array.from({ length: challengeDays }, (_, i) =>
     ({
         day: i + 1,
         date: challengeStart.getTime() + ((i) * 24 * 60 * 60 * 1000),
+        strippedDate: stripTimeZone(new Date(challengeStart.getTime() + ((i) * 24 * 60 * 60 * 1000)).toISOString()),
         dateAsUTCString: UTCFormattedDate(new Date(challengeStart.getTime() + ((i) * 24 * 60 * 60 * 1000))),
         formattedDate: new Date(challengeStart.getTime() + ((i) * 24 * 60 * 60 * 1000)).toLocaleDateString('en-US', {
             month: 'short',
@@ -67,17 +71,44 @@ export default function ChallengeEntries() {
 
     }));
 
+    function findEntrybyDate(date: Date): Entry | undefined {
+        // date is coming from the user input, so we need to strip the timezone because
+        // the date stored in the DB is utc and the user input could be different
+        // plus, depending on where the user is, the date could bump up against the next day in utc land which is not great...
+        const hoursInDay = 24;
+        const localOffset = date.getTimezoneOffset() / 60;
+        const maxSafeTime = hoursInDay - localOffset;
+        if (date.getHours() > maxSafeTime) {
+            date.setHours(maxSafeTime - 1);
+        }
+        const entry = entries?.find(e => stripTimeZone(new Date(e.date).toISOString()) === stripTimeZone(date.toISOString()));
+        return entry;
+    }
+
     return (
         <div >
 
             <div className="flex justify-between mb-3">
                 <h3 className="font-bold text-lg md:text-xl ">Challenge Entries</h3>
-                <Link to={`entries/new?month=${todayMonth}&day=${today.getUTCDate()}`}>
-                    <div className="flex items-center">
+                {entryForToday ?
+                    (
+                        <Link to={`entries/${entryForToday.id}/edit`}>
+                            <div className="flex items-center">
 
-                        <PlusIcon className="h-5 w-5 text-slate-500 inline" />{" "} <span>Quick Add For Today</span>
-                    </div>
-                </Link>
+                                <PencilIcon className="h-5 w-5 text-slate-500 inline" />{" "} <span>Quick Edit For Today</span>
+                            </div>
+                        </Link>
+                    ) :
+                    (
+                        <Link to={`entries/new?month=${todayMonth}&day=${today.getDate()}`}>
+                            <div className="flex items-center">
+
+                                <PlusIcon className="h-5 w-5 text-slate-500 inline" />{" "} <span>Quick Add For Today</span>
+                            </div>
+                        </Link>
+                    )
+                }
+
             </div>
             <table className="w-full border-separate border-spacing-0">
                 <thead>
@@ -93,7 +124,7 @@ export default function ChallengeEntries() {
                     {
                         challengeDaysArray.map(({ date, day, dateAsUTCString, formattedDate }) => {
 
-                            const entry = entries?.find(e => UTCFormattedDate(new Date(e.date)) === dateAsUTCString);
+                            const entry = findEntrybyDate(new Date(dateAsUTCString))
                             const entryDate = new Date(date);
                             const month = formattedDate.split(' ')[0];
                             const dayOfMonth = formattedDate.split(' ')[1];

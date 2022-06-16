@@ -20,6 +20,7 @@ A list of challenges faced while building the app.
 - When querying relational data you need to use select or include to actually get it to appear in your queries
     - Need to research whether this could appear in the types prisma generates or not. [It currently doesn't by default but you can make it work.][1]
 - Javascript Dates... oh boy. Had to do some [research into Javascript dates][2], [how Prisma stores and serves dates back to you][3], and how to reconcile javascript date manipulation between the various dates stored.
+    - This has been the biggest issue... basically dates coming from the user need to be normalized and checked against UTC dates. All dates being stored in the DB get normalized to GMT. This causes pretty big problems on a date based app. Depending on the users offset you could be off by a day either reading or store data... again not great.
 - Couldn't get the users profile to load in the project root for some reason. Even though I included the one to many relationship in the query and even added the code from one of the points above, my application still didn't recognize that the user object had a profile on it. Maybe it's due to how optional user handles the use matches? :shrug:
 
 
