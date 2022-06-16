@@ -9,7 +9,7 @@ import { requireUserId } from "~/session.server";
 
 import type { challengeMatchesData } from "~/routes/challenges/$challengeId/index";
 import invariant from "tiny-invariant";
-import { format, getDate, getYear } from "date-fns";
+import { format, getYear } from "date-fns";
 
 
 type ActionData = {
@@ -109,11 +109,11 @@ export const action: ActionFunction = async ({ request, params }) => {
         notes,
         challengeId,
         activityId,
-        date: new Date(date)
+        date: date
 
     });
 
-    console.log(challengeEntry)
+
 
     return redirect(`/challenges/${challengeId}`);
 }
@@ -146,7 +146,7 @@ export default function EditChallengeEntryPage() {
     const match = matches.find(match => match.pathname === `/challenges/${params.challengeId}`);
 
     const matchesData = match?.data as challengeMatchesData;
-    console.log({ activityDate: loaderData.entry.date, updatedDate: updatedDate.toISOString() })
+
     React.useEffect(() => {
         if (actionData?.errors?.amount) {
             amountRef.current?.focus();

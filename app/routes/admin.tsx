@@ -9,7 +9,7 @@ import { getActiveChallengesListItems } from "../models/challenge.server";
 
 import { Popover, Transition } from "@headlessui/react"
 import { MenuIcon, XIcon } from "@heroicons/react/outline"
-import { getAdminUserById, getUserById } from "~/models/user.server";
+import { getUserById } from "~/models/user.server";
 
 type LoaderData = {
     challengeListItems: Awaited<ReturnType<typeof getActiveChallengesListItems>>;
