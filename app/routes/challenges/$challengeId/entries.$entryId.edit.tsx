@@ -138,7 +138,7 @@ export default function EditChallengeEntryPage() {
     const month = format(new Date(strippedEntryDate), "MMM");
     const day = new Date(loaderData.entry.date).getUTCDate();
     const activityDate = new Date(loaderData.entry.date);
-    const updatedDate = new Date(activityDate.getFullYear(), activityDate.getUTCMonth(), activityDate.getUTCDate());
+    const updatedDate = new Date(activityDate.getFullYear(), activityDate.getUTCMonth() + 1, activityDate.getUTCDate());
     const matches = useMatches();
     const params = useParams();
 
