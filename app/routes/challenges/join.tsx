@@ -4,7 +4,7 @@ import { ActionFunction, LoaderFunction, json } from "@remix-run/node";
 import { ChallengeWithActivities, getOpenChallenges, joinChallengeById } from "~/models/challenge.server";
 import { requireUserId } from "~/session.server";
 import { format } from "date-fns";
-import { getUTCDate, getUTCMonth } from "~/utils";
+import { getUTCDate, getUTCMonth, useWindowSize } from "~/utils";
 
 export type LoaderData = {
 
@@ -43,7 +43,9 @@ export const loader: LoaderFunction = async ({ request, params }) => {
 
 export default function JoinOpenChallengesPage() {
     const data = useLoaderData() as LoaderData;
+    const { width, height } = useWindowSize();
 
+    const isMobile = width ? width < 640 : false;
 
     return (
         <div>
@@ -60,7 +62,10 @@ export default function JoinOpenChallengesPage() {
                 </div>
 
             ) : (
-                <div>It looks like there aren't any challenges to join at this time. You can click one of your active challenges on the left to start tracking!</div>
+                <div>
+                    It looks like there aren't any challenges to join at this time.
+                    If you are part of an active challenge you can find it {isMobile ? "in the menu above" : "in the left menu"} to start tracking!
+                </div>
             )}
         </div>
     );

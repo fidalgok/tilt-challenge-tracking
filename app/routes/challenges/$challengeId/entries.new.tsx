@@ -1,12 +1,20 @@
-import type { ActionFunction } from "@remix-run/node";
+import type { ActionFunction, LoaderFunction } from "@remix-run/node";
 import { json, redirect } from "@remix-run/node";
-import { Form, useActionData, useParams, useSearchParams, useMatches } from "@remix-run/react";
+import { Form, useActionData, useParams, useSearchParams, useMatches, useLoaderData } from "@remix-run/react";
 import * as React from "react";
 
-import { createChallengeEntry } from "~/models/challenge.server";
+import { createChallengeEntry, Entry, getChallengeEntries } from "~/models/challenge.server";
 import { requireUserId } from "~/session.server";
 
 import type { challengeMatchesData } from "~/routes/challenges/$challengeId/index";
+import { format, getDate } from "date-fns";
+import invariant from "tiny-invariant";
+
+type LoaderData = {
+
+    month: string;
+    day: string | number;
+}
 
 type ActionData = {
     errors?: {
@@ -35,6 +43,7 @@ const months: { [key: string]: number } = {
     "Dec": 12,
 }
 
+
 export const action: ActionFunction = async ({ request, params }) => {
     const userId = await requireUserId(request);
 
@@ -43,9 +52,16 @@ export const action: ActionFunction = async ({ request, params }) => {
     const notes = formData.get("notes");
     const month = formData.get("month");
     const day = formData.get("day");
+
     if (typeof month !== 'string' || month.length == 0) {
         return json<ActionData>(
-            { errors: { amount: "Whoops! Looks like something went wrong." }, month: `${month}`, day: `${day}` },
+            { errors: { date: "Whoops! Looks like something went wrong. Missing the month" }, month: `${month}`, day: `${day}` },
+            { status: 400 }
+        );
+    }
+    if (typeof day !== 'string' || day.length == 0) {
+        return json<ActionData>(
+            { errors: { date: "Whoops! Looks like something went wrong. Missing the date" }, month: `${month}`, day: `${day}` },
             { status: 400 }
         );
     }
@@ -54,7 +70,7 @@ export const action: ActionFunction = async ({ request, params }) => {
     const challengeId = params.challengeId;
     const activityId = formData.get("activityId");
 
-    console.log({ userId, amount, notes, date, challengeId, activityId });
+
 
     if (Number.isNaN(amount) || amount <= 0) {
         return json<ActionData>(
@@ -96,13 +112,39 @@ export const action: ActionFunction = async ({ request, params }) => {
     return redirect(`/challenges/${challengeId}`);
 }
 
+
+
+export const loader: LoaderFunction = async ({ request, params }) => {
+    const userId = await requireUserId(request);
+    const challengeId = params.challengeId;
+    invariant(challengeId, "challengeId is required");
+    const [entries] = await getChallengeEntries({ id: challengeId, userId });
+    const url = new URL(request.url);
+    const spMonth = url.searchParams.get("month");
+    const spDay = url.searchParams.get("day");
+    const month = spMonth ? spMonth : format(new Date(), "MMM");
+    const day = spDay ? spDay : getDate(new Date());
+
+    const foundEntry = entries.entries.find(entry => format(new Date(entry.date), "MMM") === month && new Date(entry.date).getUTCDate() === Number(day))
+
+    if (foundEntry) {
+        return redirect(`/challenges/${challengeId}/entries/${foundEntry.id}/edit`);
+    }
+    return json<LoaderData>({
+        month,
+        day,
+
+    })
+}
+
 export default function NewChallengeEntryPage() {
     const actionData = useActionData() as ActionData;
-    const [searchParams] = useSearchParams();
-    const month = actionData?.month ? actionData.month : searchParams.get("month");
-    const day = actionData?.day ? actionData.day : searchParams.get("day");
+    const loaderData = useLoaderData() as LoaderData;
     const matches = useMatches();
     const params = useParams();
+
+    const month = actionData?.month ? actionData.month : loaderData.month;
+    const day = actionData?.day ? actionData.day : loaderData.day;
 
     const amountRef = React.useRef<HTMLInputElement>(null);
     const notesRef = React.useRef<HTMLTextAreaElement>(null);

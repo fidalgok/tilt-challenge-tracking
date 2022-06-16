@@ -135,10 +135,10 @@ export default function ChallengeDetailsPage() {
                             <div className="place-self-center font-bold">Sessions / Week</div>
                             <div className="place-self-center font-bold">Steps / Session</div>
                             {projectedSteps.map(({ sessions, steps }) => (
-                                <>
+                                <div key={steps} className="col-span-2 grid grid-cols-2 gap-4">
                                     <div className="place-self-center text-xl">{sessions}</div>
                                     <div className="place-self-center text-xl">{steps}</div>
-                                </>
+                                </div>
                             ))}
                         </div>
                     </div>
@@ -218,10 +218,10 @@ export default function ChallengeDetailsPage() {
                                                 <div className="place-self-center font-bold">Sessions / Week</div>
                                                 <div className="place-self-center font-bold">Steps / Session</div>
                                                 {projectedSteps.map(({ sessions, steps }) => (
-                                                    <>
+                                                    <div key={steps} className="col-span-2 grid grid-cols-2 gap-4">
                                                         <div className="place-self-center text-xl">{sessions}</div>
                                                         <div className="place-self-center text-xl">{steps}</div>
-                                                    </>
+                                                    </div>
                                                 ))}
                                             </div>
                                         </div>
