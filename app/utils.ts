@@ -91,6 +91,10 @@ export function getUTCDate(date: number): number {
   //Prisma gives us dates in ISO format, but we don't need the timezone indicator at the end
   return new Date(date).getUTCDate();
 }
+
+export function stripTimeZone(date: string) {
+  return date.split("T")[0];
+}
 export function getUTCMonth(date: number): number {
   //Prisma gives us dates in ISO format, but we don't need the timezone indicator at the end
   return new Date(date).getUTCMonth();

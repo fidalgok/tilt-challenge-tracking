@@ -10,6 +10,7 @@ import { requireUserId } from "~/session.server";
 import type { challengeMatchesData } from "~/routes/challenges/$challengeId/index";
 import invariant from "tiny-invariant";
 import { format, getYear } from "date-fns";
+import { stripTimeZone } from "~/utils";
 
 
 type ActionData = {
@@ -131,9 +132,10 @@ export const loader: LoaderFunction = async ({ request, params }) => {
 export default function EditChallengeEntryPage() {
     const actionData = useActionData() as ActionData;
     const loaderData = useLoaderData() as LoaderData;
-    console.log(loaderData.entry);
 
-    const month = format(new Date(loaderData.entry.date), "MMM");
+    const strippedEntryDate = stripTimeZone(loaderData.entry.date.toString()).split("-").join("/");
+
+    const month = format(new Date(strippedEntryDate), "MMM");
     const day = new Date(loaderData.entry.date).getUTCDate();
     const activityDate = new Date(loaderData.entry.date);
     const updatedDate = new Date(activityDate.getFullYear(), activityDate.getUTCMonth() + 1, activityDate.getUTCDate());

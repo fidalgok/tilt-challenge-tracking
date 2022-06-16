@@ -3,7 +3,7 @@ import { Form, Link, useActionData, useTransition } from "@remix-run/react";
 import { ActionFunction, json } from "@remix-run/node";
 import { ChallengeWithActivities, deleteEntry } from "~/models/challenge.server";
 import { requireUser } from "~/session.server";
-import { daysBetween, useMatchesData, UTCFormattedDate } from "~/utils";
+import { daysBetween, useMatchesData, UTCFormattedDate, stripTimeZone } from "~/utils";
 
 import { PlusIcon, PencilIcon } from '@heroicons/react/outline'
 import { format, isToday } from "date-fns";
@@ -40,9 +40,7 @@ export const action: ActionFunction = async ({ request }) => {
     return null;
 }
 
-function stripTimeZone(date: string) {
-    return date.split("T")[0];
-}
+
 
 export default function ChallengeEntries() {
     const actionData = useActionData() as ActionData;
