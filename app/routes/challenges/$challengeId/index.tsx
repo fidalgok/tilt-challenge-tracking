@@ -40,7 +40,9 @@ export const action: ActionFunction = async ({ request }) => {
     return null;
 }
 
-
+function stripTimeZone(date: string) {
+    return date.split("T")[0];
+}
 
 export default function ChallengeEntries() {
     const actionData = useActionData() as ActionData;
@@ -60,6 +62,7 @@ export default function ChallengeEntries() {
     ({
         day: i + 1,
         date: challengeStart.getTime() + ((i) * 24 * 60 * 60 * 1000),
+        strippedDate: stripTimeZone(new Date(challengeStart.getTime() + ((i) * 24 * 60 * 60 * 1000)).toISOString()),
         dateAsUTCString: UTCFormattedDate(new Date(challengeStart.getTime() + ((i) * 24 * 60 * 60 * 1000))),
         formattedDate: new Date(challengeStart.getTime() + ((i) * 24 * 60 * 60 * 1000)).toLocaleDateString('en-US', {
             month: 'short',
@@ -69,7 +72,7 @@ export default function ChallengeEntries() {
     }));
 
     function findEntrybyDate(date: Date): Entry | undefined {
-        const entry = entries?.find(e => UTCFormattedDate(new Date(e.date)) === UTCFormattedDate(date));
+        const entry = entries?.find(e => stripTimeZone(new Date(e.date).toISOString()) === stripTimeZone(date.toISOString()));
         return entry;
     }
 
@@ -112,7 +115,7 @@ export default function ChallengeEntries() {
                     {
                         challengeDaysArray.map(({ date, day, dateAsUTCString, formattedDate }) => {
 
-                            const entry = entries?.find(e => UTCFormattedDate(new Date(e.date)) === dateAsUTCString);
+                            const entry = findEntrybyDate(new Date(dateAsUTCString))
                             const entryDate = new Date(date);
                             const month = formattedDate.split(' ')[0];
                             const dayOfMonth = formattedDate.split(' ')[1];

@@ -78,7 +78,7 @@ function ChallengesMenu({ data }: { data: LoaderData }) {
             </div>
             <Popover.Group className="hidden md:h-full md:block border-r bg-gray-50">
                 <div className="max-w-[200px]  md:max-w-[200px] [@media(min-width:968px)]:max-w-sm">
-                    <Link to="join" className="block p-4 text-xl text-blue-500">
+                    <Link to="/challenges/join" className="block p-4 text-xl text-blue-500">
                         + Join Other Active Challenges
                     </Link>
 
@@ -94,7 +94,7 @@ function ChallengesMenu({ data }: { data: LoaderData }) {
                                         className={({ isActive }) =>
                                             `block border-b p-4 text-xl ${isActive ? "bg-white" : ""}`
                                         }
-                                        to={challenge.id}
+                                        to={`/challenges/${challenge.id}`}
                                     >
                                         🏆 {challenge.title}
                                     </NavLink>

@@ -1,5 +1,6 @@
 import type { Challenge, Prisma, User, ChallengeActivity, Entry, Activity } from "@prisma/client";
 
+
 import { prisma } from "~/db.server";
 
 export type ChallengeWithActivities = Prisma.ChallengeGetPayload<{
@@ -15,6 +16,14 @@ export function getChallenge({ id, userId }: Pick<Challenge, "id"> & { userId: U
     include: { activity: true },
 
   });
+}
+
+export async function getChallengesByAdminId() {
+
+  return prisma.challenge.findMany({
+    where: { published: true },
+    include: { activity: true },
+  })
 }
 
 export function createChallenge({ title, description, startDate, endDate, isPublic, published }: Pick<Challenge, "title" | "description" | "startDate" | "endDate" | "published"> & { isPublic: Challenge["public"] }) {

@@ -135,6 +135,8 @@ export default function EditChallengeEntryPage() {
 
     const month = format(new Date(loaderData.entry.date), "MMM");
     const day = getDate(new Date(loaderData.entry.date));
+    const activityDate = new Date(loaderData.entry.date);
+    const updatedDate = new Date(activityDate.getFullYear(), activityDate.getUTCMonth(), activityDate.getUTCDate());
     const matches = useMatches();
     const params = useParams();
 
@@ -144,7 +146,7 @@ export default function EditChallengeEntryPage() {
     const match = matches.find(match => match.pathname === `/challenges/${params.challengeId}`);
 
     const matchesData = match?.data as challengeMatchesData;
-
+    console.log({ activityDate: loaderData.entry.date, updatedDate: updatedDate.toISOString() })
     React.useEffect(() => {
         if (actionData?.errors?.amount) {
             amountRef.current?.focus();
@@ -214,6 +216,7 @@ export default function EditChallengeEntryPage() {
                 <input type={"hidden"} name="year" value={getYear(new Date(loaderData.entry.date))} />
                 <input type="hidden" name="month" value={format(new Date(loaderData.entry.date), "MMM") || ""} />
                 <input type="hidden" name="day" value={getDate(new Date(loaderData.entry.date)) || ""} />
+                <input type="hidden" name="activityDate" value={updatedDate.toISOString()} />
                 <input type="hidden" name="activityId" value={matchesData.challenge?.activity[0].activityId || ""} />
             </div>
             <div className="text-right">
