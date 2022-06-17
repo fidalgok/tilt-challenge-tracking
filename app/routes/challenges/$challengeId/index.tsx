@@ -168,7 +168,7 @@ export default function ChallengeEntries() {
                             const entryDate = new Date(date);
                             const month = formattedDate.split(' ')[0];
                             const dayOfMonth = formattedDate.split(' ')[1];
-
+                            //console.log(strippedDate)
                             return (
                                 <tr
                                     id={`${month}-${dayOfMonth}`}
