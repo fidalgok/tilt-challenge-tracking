@@ -100,10 +100,10 @@ export async function getChallengeActivityEntries({ challengeId, activityId }: {
 }
 
 export function getChallengeEntries({ id, userId }: Pick<Challenge, "id"> & { userId: User["id"] }) {
-  return prisma.user.findMany({
-    where: { id: userId, entries: { some: { challengeId: id } } },
-    select: { entries: true }
+  return prisma.entry.findMany({
+    where: { challengeId: id, user: { id: userId } },
   })
+
 }
 
 export function getTotalSteps({ id, userId }: Pick<Challenge, "id"> & { userId: User["id"] }) {
