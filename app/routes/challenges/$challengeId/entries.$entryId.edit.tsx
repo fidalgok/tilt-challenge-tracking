@@ -216,7 +216,7 @@ export default function EditChallengeEntryPage() {
             </div>
             <div>
                 <input type={"hidden"} name="year" value={getYear(new Date(loaderData.entry.date))} />
-                <input type="hidden" name="month" value={format(new Date(loaderData.entry.date), "MMM") || ""} />
+                <input type="hidden" name="month" value={month} />
                 <input type="hidden" name="day" value={new Date(loaderData.entry.date).getUTCDate() || ""} />
                 <input type="hidden" name="activityDate" value={updatedDate.toISOString()} />
                 <input type="hidden" name="activityId" value={matchesData.challenge?.activity[0].activityId || ""} />

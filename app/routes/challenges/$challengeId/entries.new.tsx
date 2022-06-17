@@ -125,7 +125,7 @@ export const loader: LoaderFunction = async ({ request, params }) => {
     const month = spMonth ? spMonth : format(new Date(), "MMM");
     const day = spDay ? spDay : getDate(new Date());
 
-    const foundEntry = entries.entries.find(entry => format(new Date(entry.date), "MMM") === month && new Date(entry.date).getUTCDate() === Number(day))
+    const foundEntry = entries?.entries?.find(entry => format(new Date(entry.date), "MMM") === month && new Date(entry.date).getUTCDate() === Number(day))
 
     if (foundEntry) {
         return redirect(`/challenges/${challengeId}/entries/${foundEntry.id}/edit`);

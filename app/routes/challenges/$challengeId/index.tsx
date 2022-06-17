@@ -7,6 +7,8 @@ import { daysBetween, useMatchesData, UTCFormattedDate, stripTimeZone } from "~/
 
 import { PlusIcon, PencilIcon } from '@heroicons/react/outline'
 import { format, isToday } from "date-fns";
+import { create } from "domain";
+
 
 export type challengeMatchesData = {
     challenge?: ChallengeWithActivities,
@@ -68,6 +70,30 @@ export default function ChallengeEntries() {
         }),
 
     }));
+
+    function parseDateFromServer(date: string): { year: number, month: number, date: number, originalDate: string, parsedDate: Date } {
+        // this receives a stripped down version of the date
+        // in this format YYYY/MM/DD
+        const createdDate = new Date(date);
+        const UTCYear = createdDate.getUTCFullYear();
+        const UTCMonth = createdDate.getUTCMonth();
+        const UTCDate = createdDate.getUTCDate();
+        return {
+            year: UTCYear,
+            month: UTCMonth,
+            date: UTCDate,
+            originalDate: date,
+            parsedDate: new Date(`${UTCYear}/${UTCMonth}/${UTCDate}`)
+        }
+    }
+
+    function getMonth(month: string | number): string | null {
+        const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+        if (typeof month == 'number') {
+            return months[month];
+        }
+        return null;
+    }
 
 
     function findEntrybyDate(date: Date): Entry | undefined {
