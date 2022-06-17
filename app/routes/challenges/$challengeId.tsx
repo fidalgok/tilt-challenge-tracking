@@ -40,7 +40,8 @@ export const loader: LoaderFunction = async ({ request, params }) => {
         throw new Response("Not Found", { status: 404 });
     }
 
-    const [entries] = await getChallengeEntries({ id: params.challengeId, userId });
+    const entries = await getChallengeEntries({ id: params.challengeId, userId });
+
     const aggregation = await getTotalSteps({ id: params.challengeId, userId });
 
     const leaderboardData = await getChallengeLeaderboard({ id: params.challengeId });
@@ -66,12 +67,12 @@ export const loader: LoaderFunction = async ({ request, params }) => {
         });
 
 
-    return json<LoaderData>({ challenge, entries: entries?.entries, totalSteps: aggregation._sum.amount || 0, leaderboard });
+    return json<LoaderData>({ challenge, entries: entries, totalSteps: aggregation._sum.amount || 0, leaderboard });
 
 }
 
 function getProjectedStepsPerWeek(stepsCompleted: number, stepsGoal: number, daysLeft: number): { sessions: number, steps: number }[] {
-    // =ROUNDUP(stepsRemaining/ ((daysLeft)*3/7))
+
     const stepsRemaining = stepsGoal - stepsCompleted;
     const projectedSessionsPerWeek = [3, 4, 5, 6, 7];
     const stepProjection = projectedSessionsPerWeek.map(projectedSessions => ({

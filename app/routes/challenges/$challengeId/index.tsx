@@ -7,7 +7,7 @@ import { daysBetween, useMatchesData, UTCFormattedDate, stripTimeZone } from "~/
 
 import { PlusIcon, PencilIcon } from '@heroicons/react/outline'
 import { format, isToday } from "date-fns";
-import { create } from "domain";
+
 
 
 export type challengeMatchesData = {
@@ -50,8 +50,8 @@ export default function ChallengeEntries() {
     let busy = transition.submission;
     const matches = useMatchesData('routes/challenges/$challengeId');
     const { challenge, entries } = matches as challengeMatchesData;
-    const challengeStart = new Date(challenge?.startDate || "now");
-    const challengeEnd = new Date(challenge?.endDate || "now");
+    const challengeStart = new Date(challenge?.startDate ? stripTimeZone(challenge.startDate.toString()) : "now");
+    const challengeEnd = new Date(challenge?.endDate ? stripTimeZone(challenge.endDate.toString()) : "now");
     const today = new Date();
     const todayMonth = format(today, 'MMM');
     const entryForToday = findEntrybyDate(new Date());
@@ -168,7 +168,7 @@ export default function ChallengeEntries() {
                             const entryDate = new Date(date);
                             const month = formattedDate.split(' ')[0];
                             const dayOfMonth = formattedDate.split(' ')[1];
-
+                            //console.log(strippedDate)
                             return (
                                 <tr
                                     id={`${month}-${dayOfMonth}`}
