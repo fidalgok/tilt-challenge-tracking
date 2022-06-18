@@ -7,6 +7,10 @@ export type ChallengeWithActivities = Prisma.ChallengeGetPayload<{
   include: { activity: true }
 }>
 
+export type ChallengeWithActivitiesUsers = Prisma.ChallengeGetPayload<{
+  include: { activity: true, users: true },
+}>
+
 export type { Challenge, Entry } from "@prisma/client";
 
 export function getChallenge({ id, userId }: Pick<Challenge, "id"> & { userId: User["id"] }) {
@@ -15,6 +19,13 @@ export function getChallenge({ id, userId }: Pick<Challenge, "id"> & { userId: U
     where: { id, published: true, users: { some: { id: userId } } },
     include: { activity: true },
 
+  });
+}
+
+export function adminGetChallenge({ id }: Pick<Challenge, "id">) {
+  return prisma.challenge.findFirst({
+    where: { id, published: true },
+    include: { activity: true, users: true },
   });
 }
 

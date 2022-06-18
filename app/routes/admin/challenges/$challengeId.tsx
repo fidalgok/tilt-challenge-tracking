@@ -1,18 +1,31 @@
-import { Link, useLoaderData } from "@remix-run/react";
-import { LoaderFunction } from "@remix-run/node";
-import { Entry, getChallenge } from "~/models/challenge.server";
+import { Link, Outlet, useLoaderData } from "@remix-run/react";
+import { json, LoaderFunction, redirect } from "@remix-run/node";
+import { adminGetChallenge, ChallengeWithActivitiesUsers, Entry } from "~/models/challenge.server";
 import invariant from "tiny-invariant";
-import { add, eachDayOfInterval, endOfMonth, format, getDay, isEqual, isSameDay, isSameMonth, isToday, parse, parseISO, startOfToday } from "date-fns";
+import { add, eachDayOfInterval, endOfMonth, endOfWeek, format, getDay, isEqual, isSameDay, isSameMonth, isToday, parse, parseISO, startOfToday, startOfWeek } from "date-fns";
 import { Menu, Transition } from "@headlessui/react";
 import { ChevronLeftIcon, ChevronRightIcon, DotsVerticalIcon } from "@heroicons/react/outline";
 import { Fragment, useState } from "react";
 
+import { useUser } from "~/utils";
+import { getUser, requireUserId } from "~/session.server";
+
+type LoaderData = {
+    challenge: ChallengeWithActivitiesUsers
+}
+
 export const loader: LoaderFunction = async ({ request, params }) => {
 
-
+    const user = await getUser(request);
+    if (!user || user.role !== 'ADMIN' || user.email !== "kyle.fidalgo@gmail.com") {
+        return redirect("/challenges");
+    }
     invariant(params.challengeId, "challengeId not found");
-
-    return null;
+    const challenge = await adminGetChallenge({ id: params.challengeId });
+    if (!challenge) {
+        throw new Response("Not Found", { status: 404 });
+    }
+    return json<LoaderData>({ challenge });
 }
 
 const entries = [
@@ -44,7 +57,7 @@ const entries = [
         updatedAt: new Date('2022-06-10T00:00:00.000Z'),
     },
     {
-        id: "1",
+        id: "5",
         amount: 10,
         notes: "This is a note",
         challengeActivityId: "1",
@@ -71,7 +84,7 @@ function classNames(...classes: (string | boolean)[]): string {
 
 function parseDateStringFromServer(date: Date) {
     // the date from the server is technically a string even though it's typed as a date
-    return date.toString().split("Z")[0];
+    return date.toISOString().split("Z")[0];
 }
 
 export default function AdminChallengesViewChallengePage() {
@@ -80,9 +93,12 @@ export default function AdminChallengesViewChallengePage() {
         <div>
 
             <p>
-                Challenge info here
+                Challenge details here.
+                can edit certain fields if there haven't been entries yet.
             </p>
+            <Outlet />
             <Calendar />
+            <pre><code>{JSON.stringify(data, null, 2)}</code></pre>
         </div>
     );
 }
@@ -100,8 +116,8 @@ function Calendar() {
     let firstDayCurrentMonth = parse(currentMonth, 'MMM-yyyy', new Date())
 
     let days = eachDayOfInterval({
-        start: firstDayCurrentMonth,
-        end: endOfMonth(firstDayCurrentMonth),
+        start: startOfWeek(firstDayCurrentMonth),
+        end: endOfWeek(endOfMonth(firstDayCurrentMonth)),
     });
 
     function previousMonth() {
@@ -114,8 +130,10 @@ function Calendar() {
         setCurrentMonth(format(firstDayNextMonth, 'MMM-yyyy'))
     }
 
-    let selectedDayEntries = entries.filter((entry) =>
-        isSameDay(parseISO(entry.date.toISOString()), selectedDay)
+    let selectedDayEntries = entries.filter((entry) => {
+
+        return isSameDay(parseISO(entry.date.toISOString()), selectedDay)
+    }
     )
 
 
@@ -207,7 +225,7 @@ function Calendar() {
                     </div>
                     <section className="mt-12 md:mt-0 md:pl-14">
                         <h2 className="font-semibold text-gray-900">
-                            Schedule for{' '}
+                            Entries for{' '}
                             <time dateTime={format(selectedDay, 'yyyy-MM-dd')}>
                                 {format(selectedDay, 'MMM dd, yyy')}
                             </time>
@@ -229,7 +247,7 @@ function Calendar() {
 }
 
 function EntryItem({ entry }: { entry: Partial<Entry> & Pick<Entry, 'date'> }) {
-    let entryDate = entry?.date?.toISOString().split("Z")[0];
+    let entryDate = parseDateStringFromServer(entry.date);
     let startDateTime = parseISO(entryDate);
     console.log({ entryDate, startDateTime, entry })
 
