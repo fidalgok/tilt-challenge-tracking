@@ -5,66 +5,28 @@ import { Menu, Transition } from "@headlessui/react";
 import { ChevronLeftIcon, ChevronRightIcon, DotsVerticalIcon } from "@heroicons/react/outline";
 
 import { classNames, parseDateStringFromServer } from "~/utils";
-import { Entry } from "@prisma/client";
+import { Entry, Profile, User } from "@prisma/client";
 import { json, LoaderFunction } from "@remix-run/node";
 import { adminGetChallengeEntries } from "~/models/challenge.server";
+import type { EntriesWithUserProfiles } from "~/models/challenge.server";
 import invariant from "tiny-invariant";
 
 
 type LoaderData = {
-    entries: Awaited<ReturnType<typeof adminGetChallengeEntries>>
+    entries: (Entry & {
+        user: User & {
+            profile: {
+                firstName: string;
+                lastName: string;
+            } | null;
+        };
+    })[]
 }
 
-const entries = [
-    {
-        id: "1",
-        amount: 150,
-        notes: "This is a note",
-        challengeActivityId: "1",
-        userId: "1",
-        date: '2022-05-01T00:00:00.000Z',
-        updatedAt: '2022-06-01T00:00:00.000Z',
-    },
-    {
-        id: "3",
-        amount: 100,
-        notes: "This is a note",
-        challengeActivityId: "1",
-        userId: "1",
-        date: '2022-05-01T00:00:00.000Z',
-        updatedAt: '2022-05-21T00:00:00.000Z',
-    },
-    {
-        id: "4",
-        amount: 10,
-        notes: "This is a note",
-        challengeActivityId: "1",
-        userId: "1",
-        date: '2022-05-01T00:00:00.000Z',
-        updatedAt: '2022-06-10T00:00:00.000Z',
-    },
-    {
-        id: "5",
-        amount: 10,
-        notes: "This is a note",
-        challengeActivityId: "1",
-        userId: "1",
-        date: '2022-05-01T00:00:00.000Z',
-        updatedAt: '2022-05-01T00:25:00.000Z',
-    },
-    {
-        id: "2",
-        amount: 20,
-        notes: "This is a note",
-        challengeActivityId: "1",
-        userId: "1",
-        date: '2022-05-01T04:00:00.000Z',
-        updatedAt: '2022-06-01T04:00:00.000Z',
-    }
-]
 
 export const loader: LoaderFunction = async ({ request, params }) => {
     invariant(params.challengeId, "challengeId not found");
+
     const entries = await adminGetChallengeEntries({ challengeId: params.challengeId });
     return json<LoaderData>({ entries });
 
@@ -223,7 +185,7 @@ function Calendar({ entries }: { entries: Entry[] }) {
     )
 }
 
-function EntryItem({ entry }: { entry: Partial<Entry> & Pick<Entry, 'date'> }) {
+function EntryItem({ entry }: { entry: Partial<EntriesWithUserProfiles> & Pick<Entry, 'date'> }) {
     let entryDate = parseDateStringFromServer(entry.date.toString());
     let startDateTime = parseISO(entryDate);
     console.log({ entryDate, startDateTime, entry })
@@ -234,6 +196,7 @@ function EntryItem({ entry }: { entry: Partial<Entry> & Pick<Entry, 'date'> }) {
 
             <div className="flex-auto">
                 <p className="text-gray-900">{entry.amount}</p>
+                <p>{entry?.user?.profile?.firstName}{" "}{entry?.user?.profile?.lastName}</p>
                 <p className="mt-0.5">
                     <time dateTime={entryDate}>
                         {format(startDateTime, 'h:mm a')}

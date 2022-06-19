@@ -12,6 +12,10 @@ export type ChallengeWithActivitiesUsers = Prisma.ChallengeGetPayload<{
   include: { activity: true, users: true },
 }>
 
+export type EntriesWithUserProfiles = Prisma.EntryGetPayload<{
+  include: { user: { include: { profile: true } } }
+}>
+
 export type { Challenge, Entry } from "@prisma/client";
 
 export function getChallenge({ id, userId }: Pick<Challenge, "id"> & { userId: User["id"] }) {
