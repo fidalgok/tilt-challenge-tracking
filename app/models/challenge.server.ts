@@ -1,4 +1,5 @@
 import type { Challenge, Prisma, User, ChallengeActivity, Entry, Activity } from "@prisma/client";
+import { profile } from "console";
 
 
 import { prisma } from "~/db.server";
@@ -115,6 +116,13 @@ export function getChallengeEntries({ id, userId }: Pick<Challenge, "id"> & { us
     where: { challengeId: id, user: { id: userId } },
   })
 
+}
+
+export function adminGetChallengeEntries({ challengeId }: { challengeId: Challenge["id"] }) {
+  return prisma.entry.findMany({
+    where: { challengeId },
+    include: { user: { include: { profile: { select: { firstName: true, lastName: true } } } } },
+  });
 }
 
 export function getTotalSteps({ id, userId }: Pick<Challenge, "id"> & { userId: User["id"] }) {

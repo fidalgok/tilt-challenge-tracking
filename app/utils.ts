@@ -70,6 +70,8 @@ export function validateEmail(email: unknown): email is string {
   return typeof email === "string" && email.length > 3 && email.includes("@");
 }
 
+// Date utils...
+
 export function daysBetween(start: Date, end: Date): number {
   start = new Date(start);
   end = new Date(end);
@@ -100,8 +102,23 @@ export function getUTCMonth(date: number): number {
   return new Date(date).getUTCMonth();
 }
 
-export function classNames(...classes: string[]): string {
+export function classNames(...classes: (string | boolean)[]): string {
   return classes.filter(Boolean).join(' ')
+}
+
+/**
+ * This strips the Z from the end of a date string. When coming from the server
+ * there are times when the app only cares about the date and time but not set to the GMT timezone.
+ * Technically the "date" coming from the server is actually an iso string but the type and the app
+ * thinks it's an actual date.
+ * 
+ * @param {string} date: The isoString format of the date
+ * @returns {string} The isoString format of the date without the Z at the end
+ */
+
+export function parseDateStringFromServer(date: string): string {
+  // the date from the server is technically a string even though it's typed as a date
+  return date.split("Z")[0];
 }
 
 // HOOkS to the window resize event to update the window width and height
