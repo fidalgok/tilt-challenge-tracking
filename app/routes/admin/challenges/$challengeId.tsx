@@ -1,4 +1,4 @@
-import { Link, Outlet, useLoaderData } from "@remix-run/react";
+import { Link, NavLink, Outlet, useLoaderData } from "@remix-run/react";
 import { json, LoaderFunction, redirect } from "@remix-run/node";
 import { adminGetChallenge, ChallengeWithActivitiesUsers, Entry } from "~/models/challenge.server";
 import invariant from "tiny-invariant";
@@ -35,6 +35,9 @@ export default function AdminChallengesViewChallengePage() {
                 Challenge details here.
                 can edit certain fields if there haven't been entries yet.
             </p>
+            <nav className="flex py-2 px-1">
+                <NavLink to="./entries">Challenge Entries</NavLink>
+            </nav>
             <Outlet />
 
             <pre><code>{JSON.stringify(data, null, 2)}</code></pre>

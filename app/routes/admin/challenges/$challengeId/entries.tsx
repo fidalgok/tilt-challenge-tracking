@@ -1,15 +1,16 @@
-import { Link, Outlet, useLoaderData } from "@remix-run/react";
+import { Form, Link, useActionData, useLoaderData } from "@remix-run/react";
 import { Fragment, useState } from "react";
 import { add, eachDayOfInterval, endOfMonth, endOfWeek, format, getDay, isEqual, isSameDay, isSameMonth, isToday, parse, parseISO, startOfToday, startOfWeek } from "date-fns";
-import { Menu, Transition } from "@headlessui/react";
+import { Dialog, Menu, Transition } from "@headlessui/react";
 import { ChevronLeftIcon, ChevronRightIcon, DotsVerticalIcon } from "@heroicons/react/outline";
 
 import { classNames, parseDateStringFromServer } from "~/utils";
-import { Entry, Profile, User } from "@prisma/client";
-import { json, LoaderFunction } from "@remix-run/node";
-import { adminGetChallengeEntries } from "~/models/challenge.server";
+import { Entry, User } from "@prisma/client";
+import { ActionFunction, json, LoaderFunction } from "@remix-run/node";
+import { adminGetChallengeEntries, deleteEntry } from "~/models/challenge.server";
 import type { EntriesWithUserProfiles } from "~/models/challenge.server";
 import invariant from "tiny-invariant";
+import { requireUserId } from "~/session.server";
 
 
 type LoaderData = {
@@ -23,6 +24,40 @@ type LoaderData = {
     })[]
 }
 
+type ActionData = {
+    errors?: {
+        id?: string;
+        userId?: string;
+    }
+}
+
+export const action: ActionFunction = async ({ request }) => {
+    const user = await requireUserId(request);
+    let formData = await request.formData();
+    let { _action, ...values } = Object.fromEntries(formData);
+
+    if (!values?.entryId || typeof values.entryId !== "string") {
+        return json<ActionData>(
+            { errors: { id: "The entry id is missing." } },
+            { status: 400 }
+        );
+    }
+    if (!values?.userId || typeof values.userId !== "string") {
+        return json<ActionData>(
+            { errors: { userId: "The user id is missing." } },
+            { status: 400 }
+        );
+    }
+
+    if (_action === "delete") {
+        // delete entry
+        //console.log({ id: values.entryId, userId: values.userId })
+        return deleteEntry({ id: values.entryId, userId: values.userId })
+    } else {
+        // do nothing for now, may want to come back and add other capabilities later.
+    }
+    return null;
+}
 
 export const loader: LoaderFunction = async ({ request, params }) => {
     invariant(params.challengeId, "challengeId not found");
@@ -33,11 +68,13 @@ export const loader: LoaderFunction = async ({ request, params }) => {
 }
 
 export default function AdminChallengeIdEntriesPage() {
-    const data = useLoaderData();
-    console.log(data)
+    const data = useLoaderData() as LoaderData;
+    const actionData = useActionData() as ActionData;
+
     return (
         <div>
             TODO: entries for challenge ID and activity ID
+
             <Calendar entries={data.entries} />
         </div>
     );
@@ -225,30 +262,29 @@ function EntryItem({ entry }: { entry: Partial<EntriesWithUserProfiles> & Pick<E
                 >
                     <Menu.Items className="absolute right-0 z-10 mt-2 origin-top-right bg-white rounded-md shadow-lg w-36 ring-1 ring-black ring-opacity-5 focus:outline-none">
                         <div className="py-1">
-                            <Menu.Item>
+                            <Menu.Item >
                                 {({ active }) => (
-                                    <a
-                                        href="#"
-                                        className={classNames(
-                                            active ? 'bg-gray-100 text-gray-900' : 'text-gray-700',
-                                            'block px-4 py-2 text-sm'
-                                        )}
-                                    >
-                                        Edit
-                                    </a>
+                                    <>
+                                        <DeleteConfirmation
+                                            entryId={entry.id || ""}
+                                            user={{ id: entry?.user?.id || '', profile: { firstName: entry?.user?.profile?.firstName || '' } }}
+                                            active={active}
+                                        />
+
+                                    </>
                                 )}
                             </Menu.Item>
                             <Menu.Item>
                                 {({ active }) => (
-                                    <a
-                                        href="#"
+                                    <Link
+                                        to="./entries"
                                         className={classNames(
                                             active ? 'bg-gray-100 text-gray-900' : 'text-gray-700',
                                             'block px-4 py-2 text-sm'
                                         )}
                                     >
                                         Cancel
-                                    </a>
+                                    </Link>
                                 )}
                             </Menu.Item>
                         </div>
@@ -268,3 +304,102 @@ let colStartClasses = [
     'col-start-6',
     'col-start-7',
 ]
+
+function DeleteConfirmation({ entryId, user, active }: {
+    entryId: string, user: Pick<User, "id"> & {
+        profile: {
+            firstName: string
+        }
+    }, active: boolean
+}) {
+    let [isOpen, setIsOpen] = useState(false)
+
+    function closeModal() {
+        setIsOpen(false)
+    }
+
+    function openModal() {
+        setIsOpen(true)
+    }
+
+
+    return (
+        <>
+            <div className={classNames(
+                active ? 'bg-gray-100 text-gray-900' : 'text-gray-700',
+                'block px-4 py-2 text-sm'
+
+            )}>
+                <button
+                    type="button"
+                    onClick={openModal}
+                    className={classNames(
+                        active ? 'bg-gray-100 text-gray-900' : 'text-gray-700',
+                        " text-sm font-medium hover:bg-opacity-30 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75")}
+                >
+                    Delete Entry
+                </button>
+            </div>
+
+            <Transition appear show={isOpen} as={Fragment}>
+                <Dialog as="div" className="relative z-10" onClose={closeModal}>
+                    <Transition.Child
+                        as={Fragment}
+                        enter="ease-out duration-300"
+                        enterFrom="opacity-0"
+                        enterTo="opacity-100"
+                        leave="ease-in duration-200"
+                        leaveFrom="opacity-100"
+                        leaveTo="opacity-0"
+                    >
+                        <div className="fixed inset-0 bg-black bg-opacity-25" />
+                    </Transition.Child>
+
+                    <div className="fixed inset-0 overflow-y-auto">
+                        <div className="flex min-h-full items-center justify-center p-4 text-center">
+                            <Transition.Child
+                                as={Fragment}
+                                enter="ease-out duration-300"
+                                enterFrom="opacity-0 scale-95"
+                                enterTo="opacity-100 scale-100"
+                                leave="ease-in duration-200"
+                                leaveFrom="opacity-100 scale-100"
+                                leaveTo="opacity-0 scale-95"
+                            >
+                                <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
+                                    <Dialog.Title
+                                        as="h3"
+                                        className="text-lg font-medium leading-6 text-gray-900"
+                                    >
+                                        Delete Confirmation
+                                    </Dialog.Title>
+                                    <div className="mt-2">
+                                        <p className="text-sm text-gray-500">
+                                            You're about to delete the entry for {user?.profile.firstName}. Are you sure? This action cannot be undone.
+                                        </p>
+                                    </div>
+
+                                    <div className="mt-4">
+                                        <Form method="post">
+                                            <input type="hidden" name="entryId" value={entryId} />
+                                            <input type="hidden" name="userId" value={user.id} />
+                                            <button
+                                                type="submit"
+                                                name="_action"
+                                                value="delete"
+                                                className="inline-flex justify-center rounded-md border border-transparent bg-blue-100 px-4 py-2 text-sm font-medium text-blue-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+
+                                            >
+                                                Delete Entry
+                                            </button>
+                                        </Form>
+                                    </div>
+                                </Dialog.Panel>
+                            </Transition.Child>
+                        </div>
+                    </div>
+                </Dialog>
+            </Transition>
+        </>
+    )
+}
