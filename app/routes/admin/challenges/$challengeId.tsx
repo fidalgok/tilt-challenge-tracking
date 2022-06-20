@@ -25,9 +25,10 @@ export const loader: LoaderFunction = async ({ request, params }) => {
 
 
 export default function AdminChallengesViewChallengePage() {
-    const data = useLoaderData();
+    const data = useLoaderData() as LoaderData;
     return (
         <div>
+            <h2 className="mb-2">{data.challenge.title}</h2>
             <nav className="flex items-center justify-between py-4 ">
                 <NavLink className={({ isActive }) =>
                     isActive ? "border-b-2  border-slate-600" : undefined

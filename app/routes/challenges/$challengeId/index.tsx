@@ -6,7 +6,7 @@ import { requireUser } from "~/session.server";
 import { daysBetween, useMatchesData, UTCFormattedDate, stripTimeZone } from "~/utils";
 
 import { PlusIcon, PencilIcon } from '@heroicons/react/outline'
-import { format, isToday } from "date-fns";
+import { format, isToday, subHours } from "date-fns";
 
 
 
@@ -55,6 +55,8 @@ export default function ChallengeEntries() {
     const today = new Date();
     const todayMonth = format(today, 'MMM');
     const entryForToday = findEntrybyDate(new Date());
+    const localOffset = new Date().getTimezoneOffset() / 60;
+
 
     const challengeDays = daysBetween(challengeStart, challengeEnd);
     // create an empty array of challengeDays with an index for the day and the corresponding date    
@@ -168,14 +170,15 @@ export default function ChallengeEntries() {
                             const entryDate = new Date(date);
                             const month = formattedDate.split(' ')[0];
                             const dayOfMonth = formattedDate.split(' ')[1];
-                            //console.log(strippedDate)
+
+                            console.log(date)
                             return (
                                 <tr
                                     id={`${month}-${dayOfMonth}`}
                                     key={`${month}-${dayOfMonth}`}
                                     className="hover:bg-slate-50 border-b border-slate-100"
                                 >
-                                    <td className="p-3">{isToday(new Date(strippedDate)) ?
+                                    <td className="p-3">{isToday(date) ?
                                         (<span className="w-16 h-16 flex items-center justify-center bg-slate-800 text-white aspect-square rounded-full ">{day}</span>) :
                                         (<span className="w-16 h-16 flex items-center justify-center aspect-square rounded-full ">{day}</span>)
                                     }
