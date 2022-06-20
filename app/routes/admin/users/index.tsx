@@ -2,7 +2,7 @@ import { Form, Link, useLoaderData, useMatches } from "@remix-run/react";
 import type { ActionFunction, LoaderFunction } from "@remix-run/node";
 import { json } from "@remix-run/node";
 import { getUsers } from "~/models/user.server";
-import React, { ReducerAction, useState, Fragment } from "react";
+import React, { useState, Fragment } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import { classNames, useMatchesData } from "~/utils";
 import invariant from "tiny-invariant";
