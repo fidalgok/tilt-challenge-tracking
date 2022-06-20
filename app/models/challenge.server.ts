@@ -1,10 +1,19 @@
 import type { Challenge, Prisma, User, ChallengeActivity, Entry, Activity } from "@prisma/client";
+import { profile } from "console";
 
 
 import { prisma } from "~/db.server";
 
 export type ChallengeWithActivities = Prisma.ChallengeGetPayload<{
   include: { activity: true }
+}>
+
+export type ChallengeWithActivitiesUsers = Prisma.ChallengeGetPayload<{
+  include: { activity: true, users: true },
+}>
+
+export type EntriesWithUserProfiles = Prisma.EntryGetPayload<{
+  include: { user: { include: { profile: true } } }
 }>
 
 export type { Challenge, Entry } from "@prisma/client";
@@ -15,6 +24,13 @@ export function getChallenge({ id, userId }: Pick<Challenge, "id"> & { userId: U
     where: { id, published: true, users: { some: { id: userId } } },
     include: { activity: true },
 
+  });
+}
+
+export function adminGetChallenge({ id }: Pick<Challenge, "id">) {
+  return prisma.challenge.findFirst({
+    where: { id, published: true },
+    include: { activity: true, users: true },
   });
 }
 
@@ -104,6 +120,13 @@ export function getChallengeEntries({ id, userId }: Pick<Challenge, "id"> & { us
     where: { challengeId: id, user: { id: userId } },
   })
 
+}
+
+export function adminGetChallengeEntries({ challengeId }: { challengeId: Challenge["id"] }) {
+  return prisma.entry.findMany({
+    where: { challengeId },
+    include: { user: { include: { profile: { select: { firstName: true, lastName: true } } } } },
+  });
 }
 
 export function getTotalSteps({ id, userId }: Pick<Challenge, "id"> & { userId: User["id"] }) {

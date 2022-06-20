@@ -9,6 +9,8 @@ import { getActiveChallengesListItems } from "../models/challenge.server";
 
 import { Popover, Transition } from "@headlessui/react"
 import { MenuIcon, XIcon } from "@heroicons/react/outline"
+import { userInfo } from "os";
+
 
 type LoaderData = {
   challengeListItems: Awaited<ReturnType<typeof getActiveChallengesListItems>>;
@@ -16,6 +18,7 @@ type LoaderData = {
 
 export const loader: LoaderFunction = async ({ request }) => {
   const userId = await requireUserId(request);
+
   const challengeListItems = await getActiveChallengesListItems({ userId });
   return json<LoaderData>({ challengeListItems });
 }
@@ -56,6 +59,7 @@ export default function ChallengesPage() {
 }
 
 function ChallengesMenu({ data }: { data: LoaderData }) {
+  const user = useUser();
   return (
     <Popover className="relative px-4 md:px-0">
       <div className="mr-2 my-2 md:hidden">
@@ -90,6 +94,13 @@ function ChallengesMenu({ data }: { data: LoaderData }) {
               ))}
             </ol>
           )}
+          {user?.role === 'ADMIN' && (
+            <>
+              <hr />
+              <Link to="/admin" className="block p-4 text-xl" >Admin</Link>
+            </>
+          )
+          }
         </div>
       </Popover.Group>
       <Transition
