@@ -96,6 +96,11 @@ function Calendar({ entries }: { entries: Entry[] }) {
         end: endOfWeek(endOfMonth(firstDayCurrentMonth)),
     });
 
+    function goToToday() {
+        setSelectedDay(today)
+        setCurrentMonth(format(today, 'MMM-yyyy'))
+    }
+
     function previousMonth() {
         let firstDayNextMonth = add(firstDayCurrentMonth, { months: -1 })
         setCurrentMonth(format(firstDayNextMonth, 'MMM-yyyy'))
@@ -122,6 +127,14 @@ function Calendar({ entries }: { entries: Entry[] }) {
                             <h2 className="flex-auto font-semibold text-gray-900">
                                 {format(firstDayCurrentMonth, 'MMMM yyyy')}
                             </h2>
+                            <button
+                                type="button"
+                                onClick={goToToday}
+                                className="-my-1.5 flex flex-none items-center justify-center p-1.5 text-gray-400 hover:text-gray-500"
+                            >
+                                <span>Today</span>
+
+                            </button>
                             <button
                                 type="button"
                                 onClick={previousMonth}

@@ -1,11 +1,11 @@
 import type { LoaderFunction, ActionFunction } from "@remix-run/node";
 import { json, redirect } from "@remix-run/node";
-import { Form, Link, useLoaderData, Outlet, useActionData } from "@remix-run/react";
+import { Form, Link, useLoaderData, useActionData } from "@remix-run/react";
 import * as React from "react";
-import { requireUserId } from "../../../session.server";
+import { requireUserId } from "~/session.server";
 
-import { createChallenge, createChallengeActivity, getActiveChallengesListItems } from "../../../models/challenge.server";
-import { getUserById } from "../../../models/user.server";
+import { createChallenge, createChallengeActivity, getActiveChallengesListItems } from "~/models/challenge.server";
+import { getUserById } from "~/models/user.server";
 
 type ActionData = {
     errors?: {
@@ -22,6 +22,13 @@ type LoaderData = {
 export const action: ActionFunction = async ({ request }) => {
     const userId = await requireUserId(request);
     const user = await getUserById(userId);
+    let reqHeaders = request.headers.entries();
+    // Display the key/value pairs
+    for (var pair of reqHeaders) {
+        console.log(pair[0] + ': ' + pair[1]);
+    }
+
+
     if (!user) {
         return json({ message: 'unauthorized' }, { status: 401 });
     }

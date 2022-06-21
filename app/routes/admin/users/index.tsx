@@ -77,7 +77,11 @@ export default function AdminUsersIndexPage() {
         openModal()
     }
     function handleSelectAllUsers() {
-        document.querySelectorAll('input[name="userSelect"]').forEach((input) => input.checked = !input.checked)
+        const inputList = document.querySelectorAll('input[name="userSelect"]') as NodeListOf<HTMLInputElement>
+        inputList.forEach((input) => {
+            if (input && input?.checked)
+                return input.checked = !input.checked
+        })
     }
 
     useEffect(() => {
@@ -88,9 +92,7 @@ export default function AdminUsersIndexPage() {
     return (
         <div>
 
-            <p>
-                User Management
-            </p>
+
             <EditUserDialog
                 isOpen={isOpen}
                 setIsOpen={setIsOpen}
