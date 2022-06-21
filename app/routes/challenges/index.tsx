@@ -9,6 +9,7 @@ export default function ChallengeIndexPage() {
   return (
     <p>
       No challenge selected. Select a challenge {isMobile ? "above" : "on the left"}, or{" "}
+
       <Link to="join" className="text-blue-500 underline">
         join an active challenge to start tracking.
       </Link>
