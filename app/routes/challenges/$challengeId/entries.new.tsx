@@ -6,7 +6,7 @@ import * as React from "react";
 import { createChallengeEntry, Entry, getChallengeEntries } from "~/models/challenge.server";
 import { requireUserId } from "~/session.server";
 
-import type { challengeMatchesData } from "~/routes/challenges/$challengeId/index";
+import type { LoaderData as challengeMatchesData } from "~/routes/challenges/$challengeId";
 import { format, getDate } from "date-fns";
 import invariant from "tiny-invariant";
 
