@@ -236,11 +236,11 @@ export default function ChallengeEntries() {
                                             <div className="flex flex-col justify-between md:flex-row xl:flex-col">
 
                                                 <div className="flex flex-col  py-3 px-4 mb-4">
-                                                    <h4 className=" text-center text-xl lg:text-2xl font-bold mb-3">{challenge.activity[0].unit} Completed</h4>
+                                                    <h4 className=" text-center text-xl lg:text-2xl font-bold mb-3">{capitalize(challenge.activity[0].unit || "")} Completed</h4>
                                                     <p className="text-center text-xl lg:text-4xl font-extrabold">{data.totalSteps}</p>
                                                 </div>
                                                 <div className="flex flex-col py-3 px-4 mb-4">
-                                                    <h4 className="grow text-center text-xl lg:text-2xl font-bold mb-3">{challenge.activity[0].unit} Left</h4>
+                                                    <h4 className="grow text-center text-xl lg:text-2xl font-bold mb-3">{capitalize(challenge.activity[0].unit || "")} Left</h4>
                                                     <p className="text-center text-xl lg:text-4xl font-extrabold">{(challenge.activity[0]?.amount || 0) - totalSteps}</p>
                                                 </div>
                                                 <div className="flex flex-col  pt-3 pb-7 px-4">
