@@ -1,4 +1,4 @@
-import { Form, Link, useActionData, useLoaderData } from "@remix-run/react";
+import { Form, Link, useActionData, useLoaderData, useSearchParams } from "@remix-run/react";
 import { Fragment, useState } from "react";
 import { add, eachDayOfInterval, endOfMonth, endOfWeek, format, getDay, isEqual, isSameDay, isSameMonth, isToday, parse, parseISO, startOfToday, startOfWeek } from "date-fns";
 import { Dialog, Menu, Transition } from "@headlessui/react";
@@ -60,6 +60,8 @@ export const action: ActionFunction = async ({ request }) => {
 }
 
 export const loader: LoaderFunction = async ({ request, params }) => {
+    const url = new URL(request.url);
+    const view = url.searchParams.get("view") || "month";
     invariant(params.challengeId, "challengeId not found");
 
     const entries = await adminGetChallengeEntries({ challengeId: params.challengeId });
@@ -81,24 +83,44 @@ export default function AdminChallengeIdEntriesPage() {
 }
 function Calendar({ entries }: { entries: Entry[] }) {
     // eventually will come from the server
-    let validStartDate = '2022-05-01T00:00:00.000Z';
-    let validEndDate = '2022-08-31T00:00:00.000Z';
+
+    const [searchParams] = useSearchParams();
+    const view = searchParams.get("view") === "week" ? "week" : "month";
+
 
 
     let today = startOfToday();
     //local state
     let [selectedDay, setSelectedDay] = useState(today)
     let [currentMonth, setCurrentMonth] = useState(format(today, 'MMM-yyyy'))
+    let [currentWeek, setCurrentWeek] = useState(format(today, 'ww'))
     let firstDayCurrentMonth = parse(currentMonth, 'MMM-yyyy', new Date())
+    let firstDayCurrentWeek = parse(currentWeek, 'ww', new Date())
 
     let days = eachDayOfInterval({
-        start: startOfWeek(firstDayCurrentMonth),
-        end: endOfWeek(endOfMonth(firstDayCurrentMonth)),
+        start: startOfWeek(view === "month" ? firstDayCurrentMonth : firstDayCurrentWeek),
+        end: view === "month" ? endOfWeek(endOfMonth(firstDayCurrentMonth)) : endOfWeek(firstDayCurrentWeek),
     });
 
     function goToToday() {
         setSelectedDay(today)
         setCurrentMonth(format(today, 'MMM-yyyy'))
+        setCurrentWeek(format(today, 'ww'))
+    }
+
+    function goToPrevious() {
+        if (view === "month") {
+            previousMonth()
+        } else {
+            previousWeek()
+        }
+    }
+    function goToNext() {
+        if (view === "month") {
+            nextMonth()
+        } else {
+            nextWeek()
+        }
     }
 
     function previousMonth() {
@@ -109,6 +131,17 @@ function Calendar({ entries }: { entries: Entry[] }) {
     function nextMonth() {
         let firstDayNextMonth = add(firstDayCurrentMonth, { months: 1 })
         setCurrentMonth(format(firstDayNextMonth, 'MMM-yyyy'))
+    }
+    function previousWeek() {
+        let firstDayNextWeek = add(firstDayCurrentWeek, { weeks: -1 })
+        setCurrentMonth(format(firstDayNextWeek, 'MMM-yyyy'))
+        setCurrentWeek(format(firstDayNextWeek, 'ww'))
+    }
+
+    function nextWeek() {
+        let firstDayNextWeek = add(firstDayCurrentWeek, { weeks: 1 })
+        setCurrentMonth(format(firstDayNextWeek, 'MMM-yyyy'))
+        setCurrentWeek(format(firstDayNextWeek, 'ww'))
     }
 
     let selectedDayEntries = entries.filter((entry) => {
@@ -137,18 +170,18 @@ function Calendar({ entries }: { entries: Entry[] }) {
                             </button>
                             <button
                                 type="button"
-                                onClick={previousMonth}
+                                onClick={goToPrevious}
                                 className="-my-1.5 flex flex-none items-center justify-center p-1.5 text-gray-400 hover:text-gray-500"
                             >
-                                <span className="sr-only">Previous month</span>
+                                <span className="sr-only">Previous {view === "month" ? "month" : "week"}</span>
                                 <ChevronLeftIcon className="w-5 h-5" aria-hidden="true" />
                             </button>
                             <button
-                                onClick={nextMonth}
+                                onClick={goToNext}
                                 type="button"
                                 className="-my-1.5 -mr-1.5 ml-2 flex flex-none items-center justify-center p-1.5 text-gray-400 hover:text-gray-500"
                             >
-                                <span className="sr-only">Next month</span>
+                                <span className="sr-only">Next {view === "month" ? "month" : "week"}</span>
                                 <ChevronRightIcon className="w-5 h-5" aria-hidden="true" />
                             </button>
                         </div>
