@@ -4,7 +4,7 @@ import { add, eachDayOfInterval, endOfMonth, endOfWeek, format, getDay, isEqual,
 import { Dialog, Menu, Transition } from "@headlessui/react";
 import { ChevronLeftIcon, ChevronRightIcon, DotsVerticalIcon } from "@heroicons/react/outline";
 
-import { classNames, parseDateStringFromServer } from "~/utils";
+import { classNames, parseDateStringFromServer, useWindowSize } from "~/utils";
 import { Entry, User } from "@prisma/client";
 import { ActionFunction, json, LoaderFunction } from "@remix-run/node";
 import { adminGetChallengeEntries, deleteEntry } from "~/models/challenge.server";
@@ -21,7 +21,8 @@ type LoaderData = {
                 lastName: string;
             } | null;
         };
-    })[]
+    })[],
+    maybeMobile: boolean;
 }
 
 type ActionData = {
@@ -60,12 +61,13 @@ export const action: ActionFunction = async ({ request }) => {
 }
 
 export const loader: LoaderFunction = async ({ request, params }) => {
-    const url = new URL(request.url);
-    const view = url.searchParams.get("view") || "month";
+    // get request headers
+    const userAgent = request.headers.get("user-agent");
+    const maybeMobile = userAgent ? userAgent.toLowerCase().indexOf('mobi') > -1 : false;
     invariant(params.challengeId, "challengeId not found");
 
     const entries = await adminGetChallengeEntries({ challengeId: params.challengeId });
-    return json<LoaderData>({ entries });
+    return json<LoaderData>({ entries, maybeMobile });
 
 }
 
@@ -77,15 +79,19 @@ export default function AdminChallengeIdEntriesPage() {
         <div>
             TODO: entries for challenge ID and activity ID
 
-            <Calendar entries={data.entries} />
+            <Calendar entries={data.entries} mobile={data.maybeMobile} />
         </div>
     );
 }
-function Calendar({ entries }: { entries: Entry[] }) {
+function Calendar({ entries, mobile }: { entries: Entry[], mobile: boolean }) {
     // eventually will come from the server
 
     const [searchParams] = useSearchParams();
-    const view = searchParams.get("view") === "week" ? "week" : "month";
+    const screenWidth = useWindowSize();
+    const view = searchParams.get("view") === "week" ? "week" :
+        mobile ? "week" :
+            (screenWidth?.width && screenWidth.width < 400) ? "week" :
+                "month";
 
 
 

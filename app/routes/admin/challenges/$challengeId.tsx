@@ -40,7 +40,7 @@ export default function AdminChallengesViewChallengePage() {
 
             <Outlet />
 
-            <pre><code>{JSON.stringify(data, null, 2)}</code></pre>
+            <pre className="whitespace-pre-wrap"><code>{JSON.stringify(data, null, 2)}</code></pre>
         </div>
     );
 }
