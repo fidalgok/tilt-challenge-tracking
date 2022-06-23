@@ -1,19 +1,20 @@
 import type { ActionFunction, LoaderFunction } from "@remix-run/node";
 import { json, redirect } from "@remix-run/node";
-import { Form, useActionData, useParams, useSearchParams, useMatches, useLoaderData } from "@remix-run/react";
+import { Form, useActionData, useParams, useSearchParams, useMatches, useLoaderData, useNavigate } from "@remix-run/react";
 import * as React from "react";
 
 import { createChallengeEntry, Entry, getChallengeEntries } from "~/models/challenge.server";
 import { requireUserId } from "~/session.server";
 
 import type { LoaderData as challengeMatchesData } from "~/routes/challenges/$challengeId";
-import { format, getDate } from "date-fns";
+import { format, getDate, isSameDay, parse } from "date-fns";
 import invariant from "tiny-invariant";
+import { prepareDateForServer, capitalize, parseDateStringFromServer } from "~/utils";
+import startOfToday from "date-fns/startOfToday";
 
 type LoaderData = {
 
-    month: string;
-    day: string | number;
+    date: string | null;
 }
 
 type ActionData = {
@@ -24,24 +25,10 @@ type ActionData = {
         activityId?: string;
         date?: string;
     },
-    month?: string;
-    day?: string;
+    date?: string;
+
 }
 
-const months: { [key: string]: number } = {
-    "Jan": 1,
-    "Feb": 2,
-    "Mar": 3,
-    "Apr": 4,
-    "May": 5,
-    "Jun": 6,
-    "Jul": 7,
-    "Aug": 8,
-    "Sep": 9,
-    "Oct": 10,
-    "Nov": 11,
-    "Dec": 12,
-}
 
 
 export const action: ActionFunction = async ({ request, params }) => {
@@ -50,22 +37,26 @@ export const action: ActionFunction = async ({ request, params }) => {
     const formData = await request.formData();
     const amount = Number(formData.get("amount"));
     const notes = formData.get("notes");
-    const month = formData.get("month");
-    const day = formData.get("day");
 
-    if (typeof month !== 'string' || month.length == 0) {
+    const date = formData.get('activityDate');
+    if (typeof date !== 'string' || date.length == 0) {
         return json<ActionData>(
-            { errors: { date: "Whoops! Looks like something went wrong. Missing the month" }, month: `${month}`, day: `${day}` },
+            { errors: { date: "Whoops! The activity date is missing." } },
             { status: 400 }
         );
     }
-    if (typeof day !== 'string' || day.length == 0) {
+
+    const activityDate = new Date(date);
+    let errorDateMonth = activityDate.getUTCMonth() + 1 < 10 ? `0${activityDate.getUTCMonth() + 1}` : activityDate.getUTCMonth() + 1;
+    let formattedDate = `${activityDate.getUTCFullYear()}-${errorDateMonth}-${activityDate.getUTCDate()}`;
+
+    if (activityDate instanceof Date && isNaN(activityDate.getTime())) {
+        // not a valid date
         return json<ActionData>(
-            { errors: { date: "Whoops! Looks like something went wrong. Missing the date" }, month: `${month}`, day: `${day}` },
+            { errors: { date: "Whoops! There is something wrong with the entry date." } },
             { status: 400 }
         );
     }
-    const date = new Date(`${new Date().getUTCFullYear()}/${months[month]}/${day}`);
     //hidden fields
     const challengeId = params.challengeId;
     const activityId = formData.get("activityId");
@@ -74,28 +65,28 @@ export const action: ActionFunction = async ({ request, params }) => {
 
     if (Number.isNaN(amount) || amount <= 0) {
         return json<ActionData>(
-            { errors: { amount: "Whoops! Looks like you forgot to enter an amount." }, month: `${month}`, day: `${day}` },
+            { errors: { amount: "Whoops! Looks like you forgot to enter an amount." }, date: formattedDate },
             { status: 400 }
         );
     }
 
     if (typeof notes !== "string") {
         return json<ActionData>(
-            { errors: { notes: "Notes are required." }, month: `${month}`, day: `${day}` },
+            { errors: { notes: "Notes are required." }, date: formattedDate },
             { status: 400 }
         )
     }
 
     if (typeof challengeId !== "string" || challengeId.length === 0) {
         return json<ActionData>(
-            { errors: { challengeId: "Challenge ID is required." }, month: `${month}`, day: `${day}` },
+            { errors: { challengeId: "Challenge ID is required." }, date: formattedDate },
             { status: 400 }
         )
     }
 
     if (typeof activityId !== "string" || activityId.length === 0) {
         return json<ActionData>(
-            { errors: { activityId: "Activity ID is required." }, month: `${month}`, day: `${day}` },
+            { errors: { activityId: "Activity ID is required." }, date: formattedDate },
             { status: 400 });
     }
 
@@ -105,7 +96,7 @@ export const action: ActionFunction = async ({ request, params }) => {
         notes,
         challengeId,
         activityId,
-        date
+        date: activityDate
 
     });
 
@@ -118,41 +109,51 @@ export const loader: LoaderFunction = async ({ request, params }) => {
     const userId = await requireUserId(request);
     const challengeId = params.challengeId;
     invariant(challengeId, "challengeId is required");
-    const entries = await getChallengeEntries({ id: challengeId, userId });
-    const url = new URL(request.url);
-    const spMonth = url.searchParams.get("month");
-    const spDay = url.searchParams.get("day");
-    const month = spMonth ? spMonth : format(new Date(), "MMM");
-    const day = spDay ? spDay : getDate(new Date());
+    // const entries = await getChallengeEntries({ id: challengeId, userId });
+    // const url = new URL(request.url);
+    // const date = url.searchParams.get("date") ;
 
-    const foundEntry = entries?.find(entry => format(new Date(entry.date), "MMM") === month && new Date(entry.date).getUTCDate() === Number(day))
+    // console.log(date)
+    // const foundEntry = entries?.find(entry => isSameDay(new Date(parseDateStringFromServer(entry.date.toString())), new Date(prepareDateForServer(date))));
 
-    if (foundEntry) {
-        return redirect(`/challenges/${challengeId}/entries/${foundEntry.id}/edit`);
-    }
-    return json<LoaderData>({
-        month,
-        day,
+    // if (foundEntry) {
+    //     return redirect(`/challenges/${challengeId}/entries/${foundEntry.id}/edit`);
+    // }
+    // return json<LoaderData>({
+    //     date
 
-    })
+    // })
+    return null;
 }
 
 export default function NewChallengeEntryPage() {
     const actionData = useActionData() as ActionData;
-    const loaderData = useLoaderData() as LoaderData;
-    const matches = useMatches();
     const params = useParams();
+    const [searchParams] = useSearchParams();
+    const navigate = useNavigate();
+    const matches = useMatches();
+    const match = matches.find(match => match.pathname === `/challenges/${params.challengeId}`);
+    const matchesData = match?.data as challengeMatchesData;
 
-    const month = actionData?.month ? actionData.month : loaderData.month;
-    const day = actionData?.day ? actionData.day : loaderData.day;
+    let searchDate = searchParams.get("date");
+
+    let date = actionData?.date ? actionData.date : searchDate ? searchDate : format(startOfToday(), "yyyy-MM-dd");
+
+
+    //debugger;
+    const month = format(parse(date, 'yyyy-MM-dd', new Date()), "MMMM")
+    const day = format(parse(date, 'yyyy-MM-dd', new Date()), "dd")
+    const preparedDate = prepareDateForServer(date)
+
 
     const amountRef = React.useRef<HTMLInputElement>(null);
     const notesRef = React.useRef<HTMLTextAreaElement>(null);
 
-    const match = matches.find(match => match.pathname === `/challenges/${params.challengeId}`);
+    // if somehow we land on the new page and there is already an entry for this date, redirect to the edit page
 
-    const matchesData = match?.data as challengeMatchesData;
+    const foundEntry = matchesData.entries?.find(entry => isSameDay(new Date(parseDateStringFromServer(entry.date.toString())), new Date(preparedDate)));
 
+    //console.log(foundEntry)
     React.useEffect(() => {
         if (actionData?.errors?.amount) {
             amountRef.current?.focus();
@@ -160,6 +161,11 @@ export default function NewChallengeEntryPage() {
             notesRef.current?.focus();
         }
     }, [actionData]);
+    React.useEffect(() => {
+        if (foundEntry?.id) {
+            navigate(`/challenges/${params.challengeId}/entries/${foundEntry.id}/edit`, { replace: true });
+        }
+    }, [foundEntry])
 
     return (
         <Form
@@ -177,7 +183,7 @@ export default function NewChallengeEntryPage() {
             </div>
             <div>
                 <label className="flex w-full flex-col gap-1">
-                    <span>{matchesData.challenge?.activity[0].unit} Amount: </span>
+                    <span>{capitalize(matchesData.challenge?.activity[0].unit || "")} Amount: </span>
                     <input
                         ref={amountRef}
                         name="amount"
@@ -217,8 +223,7 @@ export default function NewChallengeEntryPage() {
                 )}
             </div>
             <div>
-                <input type="hidden" name="month" value={month || ""} />
-                <input type="hidden" name="day" value={day || ""} />
+                <input type="hidden" name="activityDate" value={preparedDate} />
                 <input type="hidden" name="activityId" value={matchesData.challenge?.activity[0].activityId || ""} />
             </div>
             <div className="text-right">

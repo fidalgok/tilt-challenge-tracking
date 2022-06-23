@@ -70,6 +70,11 @@ export function validateEmail(email: unknown): email is string {
   return typeof email === "string" && email.length > 3 && email.includes("@");
 }
 
+// string utils
+export function capitalize(str: string) {
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
 // Date utils...
 
 export function daysBetween(start: Date, end: Date): number {
@@ -86,7 +91,9 @@ export function daysFromToday(endDate: Date): number {
 }
 
 export function UTCFormattedDate(date: Date): string {
-  return date.getUTCFullYear() + "-" + (date.getUTCMonth() + 1) + "-" + date.getUTCDate();
+  let month = date.getUTCMonth() + 1 < 10 ? `0${date.getUTCMonth() + 1}` : date.getUTCMonth() + 1;
+  let day = date.getUTCDate() < 10 ? `0${date.getUTCDate()}` : date.getUTCDate();
+  return date.getUTCFullYear() + "-" + (month) + "-" + day;
 }
 
 export function getUTCDate(date: number): number {
@@ -119,6 +126,28 @@ export function classNames(...classes: (string | boolean)[]): string {
 export function parseDateStringFromServer(date: string): string {
   // the date from the server is technically a string even though it's typed as a date
   return date.split("Z")[0];
+}
+
+export function prepareDateForServer(date: Date): string
+export function prepareDateForServer(y: string, m: string, d: string): string
+export function prepareDateForServer(date: string): string
+
+export function prepareDateForServer(yearOrDate: string | Date, month?: string, date?: string): string {
+  if (typeof yearOrDate === 'string' && yearOrDate.includes('-')) {
+    const y = yearOrDate.split('-')[0];
+    const m = yearOrDate.split('-')[1].length == 1 ? `0${yearOrDate.split('-')[1]}` : yearOrDate.split('-')[1];
+    const d = yearOrDate.split('-')[2].length == 1 ? `0${yearOrDate.split('-')[2]}` : yearOrDate.split('-')[2];
+    return `${y}-${m}-${d}T00:00:00.000`;
+  } else if (typeof yearOrDate === 'string') {
+    const m = month && parseFloat(month) < 10 ? `0${month}` : month;
+    const d = date && parseFloat(date) < 10 ? `0${date}` : date;
+    return `${yearOrDate}-${m}-${d}T:00:00:00`;
+
+  } else {
+    const month = yearOrDate.getMonth() + 1 < 10 ? `0${yearOrDate.getMonth() + 1}` : yearOrDate.getMonth() + 1;
+    const date = yearOrDate.getDate() < 10 ? `0${yearOrDate.getDate()}` : yearOrDate.getDate();
+    return `${yearOrDate.getFullYear()}-${month}-${date}T00:00:00`;
+  }
 }
 
 // HOOkS to the window resize event to update the window width and height

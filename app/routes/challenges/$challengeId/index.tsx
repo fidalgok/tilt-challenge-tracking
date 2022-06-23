@@ -3,7 +3,7 @@ import { Form, Link, useActionData, useTransition } from "@remix-run/react";
 import { ActionFunction, json } from "@remix-run/node";
 import { deleteEntry } from "~/models/challenge.server";
 import { requireUser } from "~/session.server";
-import { daysBetween, useMatchesData, UTCFormattedDate, stripTimeZone, parseDateStringFromServer } from "~/utils";
+import { daysBetween, useMatchesData, UTCFormattedDate, stripTimeZone, parseDateStringFromServer, capitalize } from "~/utils";
 
 import { PlusIcon, PencilIcon } from '@heroicons/react/outline'
 import { format, isSameDay, isToday, parseISO, startOfToday, subHours } from "date-fns";
@@ -41,9 +41,7 @@ export const action: ActionFunction = async ({ request }) => {
     return null;
 }
 
-function capitalize(str: string) {
-    return str.charAt(0).toUpperCase() + str.slice(1);
-}
+
 
 function getProjectedStepsPerWeek(stepsCompleted: number, stepsGoal: number, daysLeft: number): { sessions: number, steps: number }[] {
 
@@ -84,6 +82,7 @@ export default function ChallengeEntries() {
         }),
 
     }));
+
 
 
     function findEntrybyDate(date: Date): Entry | undefined {
@@ -145,18 +144,17 @@ export default function ChallengeEntries() {
                     </thead>
                     <tbody >
                         {
-                            challengeDaysArray.map(({ date, day, strippedDate, formattedDate }) => {
+                            challengeDaysArray.map(({ date, day, strippedDate, dateAsUTCString }) => {
 
                                 const entry = findEntrybyDate(new Date(strippedDate))
 
-                                const month = formattedDate.split(' ')[0];
-                                const dayOfMonth = formattedDate.split(' ')[1];
+
 
 
                                 return (
                                     <tr
-                                        id={`${month}-${dayOfMonth}`}
-                                        key={`${month}-${dayOfMonth}`}
+                                        id={`${dateAsUTCString}`}
+                                        key={`${dateAsUTCString}`}
                                         className="hover:bg-slate-50 border-b border-slate-100"
                                     >
                                         <td className="p-3">{isToday(date) ?
@@ -167,22 +165,22 @@ export default function ChallengeEntries() {
                                         <td className="p-3 w-fit">
                                             <div className="flex flex-col items-start">
 
-                                                <span className="self-center inline-block">{month}</span>
-                                                <span className="self-center inline-block mt-2">{dayOfMonth}</span>
+                                                <span className="self-center inline-block">{format(date, "MMMM")}</span>
+                                                <span className="self-center inline-block mt-2">{format(date, "dd")}</span>
 
                                             </div>
                                         </td>
                                         <td className="p-3">
                                             <div className="flex flex-col items-start ">
 
-                                                <div>{entry?.amount || " "}</div>
+                                                <div>{entry?.amount ?? " "}</div>
                                                 {entry?.notes && (<div><span className="inline-block text-sm mt-[10px] text-slate-500">{entry?.notes || " "}</span></div>)}
                                             </div>
 
                                         </td>
                                         {!entry && (
                                             <td className="p-3">
-                                                <Link className="px-2" to={`entries/new?month=${month}&day=${dayOfMonth}`}>Add</Link>
+                                                <Link className="px-2" to={`entries/new?date=${dateAsUTCString}`}>Add</Link>
                                             </td>
                                         )}
                                         {entry && (
