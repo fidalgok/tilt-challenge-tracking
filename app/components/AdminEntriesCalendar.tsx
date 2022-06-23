@@ -91,7 +91,7 @@ export function AdminEntriesCalendar({ entries }: { entries: Entry[] }) {
 
     let selectedDayEntries = entries.filter((entry) => {
 
-        return isSameDay(parseISO(entry.date.toString()), selectedDay)
+        return isSameDay(new Date(parseDateStringFromServer(entry.date.toString())), selectedDay)
     }
     )
 
@@ -181,7 +181,7 @@ export function AdminEntriesCalendar({ entries }: { entries: Entry[] }) {
 
                                     <div className="w-1 h-1 mx-auto mt-1">
                                         {entries.some((entry) =>
-                                            isSameDay(parseISO(entry.date.toString()), day)
+                                            isSameDay(new Date(parseDateStringFromServer(entry.date.toString())), day)
                                         ) && (
                                                 <div className="w-1 h-1 rounded-full bg-sky-500"></div>
                                             )}
@@ -215,7 +215,7 @@ export function AdminEntriesCalendar({ entries }: { entries: Entry[] }) {
 
 function EntryItem({ entry }: { entry: Partial<EntriesWithUserProfiles> & Pick<Entry, 'date'> }) {
     let entryDate = parseDateStringFromServer(entry.date.toString());
-    let startDateTime = parseISO(entryDate);
+    let startDateTime = new Date(parseDateStringFromServer(entryDate));
     console.log({ entryDate, startDateTime, entry })
 
     return (
