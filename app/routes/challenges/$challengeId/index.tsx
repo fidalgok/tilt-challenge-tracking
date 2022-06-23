@@ -82,7 +82,10 @@ export default function ChallengeEntries() {
         }),
 
     }));
-
+    console.log(challengeDaysArray);
+    console.log(challengeStart)
+    console.log(entryForToday);
+    console.log(entries)
 
 
     function findEntrybyDate(date: Date): Entry | undefined {
@@ -91,7 +94,7 @@ export default function ChallengeEntries() {
         // plus, depending on where the user is, the date could bump up against the next day in utc land which is not great...
 
         const entry = entries?.find(e => {
-            return isSameDay(parseISO(e.date.toString()), date)
+            return isSameDay(new Date(parseDateStringFromServer(e.date.toString())), date)
         });
 
         return entry;
@@ -148,7 +151,9 @@ export default function ChallengeEntries() {
 
                                 const entry = findEntrybyDate(new Date(strippedDate))
 
-
+                                if (entry) {
+                                    console.log(entry)
+                                }
 
 
                                 return (
