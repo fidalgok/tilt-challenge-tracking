@@ -7,7 +7,7 @@ import type { Entry } from "~/models/challenge.server"
 import { getEntryById, updateEntry } from "~/models/challenge.server";
 import { requireUserId } from "~/session.server";
 
-import type { challengeMatchesData } from "~/routes/challenges/$challengeId/index";
+import type { LoaderData as challengeMatchesData } from "~/routes/challenges/$challengeId";
 import invariant from "tiny-invariant";
 import { format, getYear } from "date-fns";
 import { stripTimeZone } from "~/utils";

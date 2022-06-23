@@ -3,10 +3,10 @@ import { Form, Link, useActionData, useTransition } from "@remix-run/react";
 import { ActionFunction, json } from "@remix-run/node";
 import { deleteEntry } from "~/models/challenge.server";
 import { requireUser } from "~/session.server";
-import { daysBetween, useMatchesData, UTCFormattedDate, stripTimeZone } from "~/utils";
+import { daysBetween, useMatchesData, UTCFormattedDate, stripTimeZone, parseDateStringFromServer } from "~/utils";
 
 import { PlusIcon, PencilIcon } from '@heroicons/react/outline'
-import { format, isToday, subHours } from "date-fns";
+import { format, isSameDay, isToday, parseISO, startOfToday, subHours } from "date-fns";
 import { Disclosure } from "@headlessui/react";
 import { ChevronUpIcon } from "@heroicons/react/solid";
 
@@ -62,12 +62,12 @@ export default function ChallengeEntries() {
     let busy = transition.submission;
     const matches = useMatchesData('routes/challenges/$challengeId');
     const { challenge, entries, ...data } = matches as LoaderData;
-    const challengeStart = new Date(challenge?.startDate ? stripTimeZone(challenge.startDate.toString()) : "now");
-    const challengeEnd = new Date(challenge?.endDate ? stripTimeZone(challenge.endDate.toString()) : "now");
-    const today = new Date();
+    const challengeStart = new Date(challenge?.startDate ? parseDateStringFromServer(challenge.startDate.toString()) : "now");
+    const challengeEnd = new Date(challenge?.endDate ? parseDateStringFromServer(challenge.endDate.toString()) : "now");
+    const today = startOfToday();
     const todayMonth = format(today, 'MMM');
-    const entryForToday = findEntrybyDate(new Date());
-    const localOffset = new Date().getTimezoneOffset() / 60;
+    const entryForToday = findEntrybyDate(today);
+
 
 
     const challengeDays = daysBetween(challengeStart, challengeEnd);
@@ -85,55 +85,14 @@ export default function ChallengeEntries() {
 
     }));
 
-    function parseDateFromServer(date: string): { year: number, month: number, date: number, originalDate: string, parsedDate: Date } {
-        // this receives a stripped down version of the date
-        // in this format YYYY/MM/DD
-        const createdDate = new Date(date);
-        const UTCYear = createdDate.getUTCFullYear();
-        const UTCMonth = createdDate.getUTCMonth();
-        const UTCDate = createdDate.getUTCDate();
-        return {
-            year: UTCYear,
-            month: UTCMonth,
-            date: UTCDate,
-            originalDate: date,
-            parsedDate: new Date(`${UTCYear}/${UTCMonth}/${UTCDate}`)
-        }
-    }
-
-    function getMonth(month: string | number): string | null {
-        const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-        if (typeof month == 'number') {
-            return months[month];
-        }
-        return null;
-    }
-
 
     function findEntrybyDate(date: Date): Entry | undefined {
         // date is coming from the user input, so we need to strip the timezone because
         // the date stored in the DB is utc and the user input could be different
         // plus, depending on where the user is, the date could bump up against the next day in utc land which is not great...
-        const hoursInDay = 24;
-        const localOffset = date.getTimezoneOffset() / 60;
-        if (localOffset < 0) {
-            // accounts for east of UTC
-            const minSafeTime = 0 - localOffset;
-            if (date.getHours() < minSafeTime) {
-                date.setHours(minSafeTime + 1);
-            }
-        } else {
-            // accounts for west of GMT 
-            const maxSafeTime = hoursInDay - localOffset;
-            if (date.getHours() > maxSafeTime) {
-                date.setHours(maxSafeTime - 1);
-            }
-        }
-        const entry = entries?.find(e => {
-            const parsedEntryDate = stripTimeZone(new Date(e.date).toISOString())
-            const parsedUserDate = stripTimeZone(date.toISOString())
 
-            return parsedEntryDate === parsedUserDate;
+        const entry = entries?.find(e => {
+            return isSameDay(parseISO(e.date.toString()), date)
         });
 
         return entry;
