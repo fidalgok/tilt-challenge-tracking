@@ -1,5 +1,5 @@
 import { Form, Link, useLoaderData, useSearchParams } from "@remix-run/react";
-import { Fragment, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { add, eachDayOfInterval, endOfMonth, endOfWeek, format, getDay, isEqual, isSameDay, isSameMonth, isToday, parse, parseISO, startOfToday, startOfWeek } from "date-fns";
 import { Dialog, Menu, Transition } from "@headlessui/react";
 import { ChevronLeftIcon, ChevronRightIcon, DotsVerticalIcon } from "@heroicons/react/outline";
@@ -35,6 +35,8 @@ export function AdminEntriesCalendar({ entries }: { entries: Entry[] }) {
 
 
     let today = startOfToday();
+    let localOffset = today.getTimezoneOffset() / 60;
+
     //local state
     let [selectedDay, setSelectedDay] = useState(today)
     let [currentMonth, setCurrentMonth] = useState(format(today, 'MMM-yyyy'))
@@ -95,6 +97,11 @@ export function AdminEntriesCalendar({ entries }: { entries: Entry[] }) {
     }
     )
 
+    useEffect(() => {
+        console.log(localOffset)
+        setSelectedDay(startOfToday());
+    }, [localOffset])
+
 
     return (
         <div className="pt-16">
@@ -154,8 +161,7 @@ export function AdminEntriesCalendar({ entries }: { entries: Entry[] }) {
                                         className={classNames(
                                             isEqual(day, selectedDay) && 'text-white',
                                             !isEqual(day, selectedDay) &&
-                                            isToday(day) &&
-                                            'text-red-500',
+                                            isToday(day) && 'text-red-500',
                                             !isEqual(day, selectedDay) &&
                                             !isToday(day) &&
                                             isSameMonth(day, firstDayCurrentMonth) &&
@@ -216,7 +222,7 @@ export function AdminEntriesCalendar({ entries }: { entries: Entry[] }) {
 function EntryItem({ entry }: { entry: Partial<EntriesWithUserProfiles> & Pick<Entry, 'date'> }) {
     let entryDate = parseDateStringFromServer(entry.date.toString());
     let startDateTime = new Date(parseDateStringFromServer(entryDate));
-    console.log({ entryDate, startDateTime, entry })
+
 
     return (
         <li className="flex items-center px-4 py-2 space-x-4 group rounded-xl focus-within:bg-gray-100 hover:bg-gray-100">
