@@ -63,7 +63,7 @@ export const action: ActionFunction = async ({ request, params }) => {
 
 
 
-    if (Number.isNaN(amount) || amount <= 0) {
+    if (Number.isNaN(amount) || amount < 0) {
         return json<ActionData>(
             { errors: { amount: "Whoops! Looks like you forgot to enter an amount." }, date: formattedDate },
             { status: 400 }

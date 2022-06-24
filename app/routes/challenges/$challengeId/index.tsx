@@ -3,10 +3,10 @@ import { Form, Link, useActionData, useTransition } from "@remix-run/react";
 import { ActionFunction, json } from "@remix-run/node";
 import { deleteEntry } from "~/models/challenge.server";
 import { requireUser } from "~/session.server";
-import { daysBetween, useMatchesData, UTCFormattedDate, stripTimeZone, parseDateStringFromServer, capitalize, useTimeZoneOffset } from "~/utils";
+import { daysBetween, useMatchesData, UTCFormattedDate, parseDateStringFromServer, capitalize, useTimeZoneOffset } from "~/utils";
 
 import { PlusIcon, PencilIcon } from '@heroicons/react/outline'
-import { addHours, format, isSameDay, isToday, startOfDay, startOfToday, subHours } from "date-fns";
+import { format, isSameDay, startOfToday } from "date-fns";
 import { Disclosure } from "@headlessui/react";
 import { ChevronUpIcon } from "@heroicons/react/solid";
 
