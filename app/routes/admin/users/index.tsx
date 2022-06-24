@@ -1,8 +1,8 @@
-import { Form, Link, useLoaderData, useMatches } from "@remix-run/react";
+import { Form, Link, useActionData, useLoaderData, useMatches, useTransition } from "@remix-run/react";
 import type { ActionFunction, LoaderFunction } from "@remix-run/node";
 import { json } from "@remix-run/node";
-import { getUsers } from "~/models/user.server";
-import React, { useState, Fragment } from "react";
+import { getUsers, updateUserRole } from "~/models/user.server";
+import React, { useState, Fragment, useEffect } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import { classNames, useMatchesData } from "~/utils";
 import invariant from "tiny-invariant";
@@ -11,8 +11,13 @@ type LoaderData = {
     users: Awaited<ReturnType<typeof getUsers>>;
 
 }
+type ActionData = {
+    update: Awaited<ReturnType<typeof updateUserRole>>[];
+}
 
 type selectedUsersList = string[] | [];
+
+type userRole = "ADMIN" | "MEMBER"
 
 export const action: ActionFunction = async ({ request }) => {
     const formData = await request.formData();
@@ -20,8 +25,14 @@ export const action: ActionFunction = async ({ request }) => {
 
     if (_action == "edit") {
 
-        console.log({ _action, values })
-
+        const entries = Object.entries(values)
+        const entryPromises = entries.map(entry => {
+            let userId = entry[0].split('-')[1];
+            let role = entry[1] as userRole;
+            return updateUserRole(userId, role)
+        })
+        const updatedUsers = await Promise.all(entryPromises);
+        return json<ActionData>({ update: updatedUsers })
     }
     return null;
 }
@@ -33,12 +44,19 @@ export const loader: LoaderFunction = async ({ request }) => {
 
 export default function AdminUsersIndexPage() {
     const { users } = useLoaderData() as LoaderData;
+    const actionData = useActionData() as ActionData;
+    const transition = useTransition();
+    const isBusy = transition.state == 'submitting';
+
     let [isOpen, setIsOpen] = useState(false)
     let [selectedUsers, setSelectedUsers] = useState<selectedUsersList>([])
     let [updateAttribute, setUpdateAttribute] = useState('')
 
     function openModal() {
         setIsOpen(true);
+    }
+    function closeModal() {
+        setIsOpen(false)
     }
 
     function handleUserCheckboxCheck(e: React.ChangeEvent<HTMLInputElement>) {
@@ -58,18 +76,42 @@ export default function AdminUsersIndexPage() {
         setUpdateAttribute(attribute);
         openModal()
     }
+    function handleSelectAllUsers(e: React.ChangeEvent<HTMLInputElement>) {
+        const inputList = document.querySelectorAll('input[name="userSelect"]') as NodeListOf<HTMLInputElement>
+        let userIds = [] as selectedUsersList;
+        inputList.forEach((input) => {
+            if (input && input.type === 'checkbox') {
+                userIds = [...userIds, input.value]
+                if (e.target.checked) {
+                    input.checked = true;
+
+                } else {
+                    input.checked = false;
+                }
+            }
+        });
+        if (e.target.checked) {
+            setSelectedUsers(userIds)
+        } else {
+            setSelectedUsers([])
+        }
+    }
+
+    useEffect(() => {
+        if (transition.type === "actionReload") {
+            closeModal();
+        }
+    }, [transition.state === "loading"])
     return (
         <div>
 
-            <p>
-                TODO: This is the index page for managing users
 
-            </p>
             <EditUserDialog
                 isOpen={isOpen}
                 setIsOpen={setIsOpen}
                 updateAttribute={updateAttribute}
                 selectedUsers={selectedUsers}
+                isBusy={isBusy}
             />
             <button
                 className={classNames(
@@ -89,6 +131,7 @@ export default function AdminUsersIndexPage() {
                                 name="userSelectAll"
                                 type="checkbox"
                                 id="userSelectAll"
+                                onChange={(e) => handleSelectAllUsers(e)}
                             />
                         </th>
                         <th className="sticky top-0 bg-slate-100 border-b border-slate-300 text-left p-3">First Name</th>
@@ -126,12 +169,13 @@ export default function AdminUsersIndexPage() {
 }
 
 
-function EditUserDialog({ isOpen, setIsOpen, updateAttribute, selectedUsers }:
+function EditUserDialog({ isOpen, setIsOpen, updateAttribute, selectedUsers, isBusy }:
     {
         isOpen: boolean,
         setIsOpen: React.Dispatch<React.SetStateAction<boolean>>,
         updateAttribute: string,
-        selectedUsers: string[]
+        selectedUsers: string[],
+        isBusy: boolean;
     }
 ) {
     const { users } = useMatchesData("routes/admin/users/index") as LoaderData
@@ -183,19 +227,19 @@ function EditUserDialog({ isOpen, setIsOpen, updateAttribute, selectedUsers }:
                                             <div>{updateAttribute}</div>
 
                                         </div>
-                                        {filteredUsers.map(user => (
+                                        {filteredUsers.map((user, i) => (
                                             <div className="grid grid-cols-2 w-full gap-4" key={user.id}>
                                                 <div>{user.profile?.firstName}{" "}{user.profile?.lastName}</div>
                                                 {updateAttribute == 'Role' && (
                                                     <div>
-                                                        <label htmlFor="role-select" className="sr-only">Role</label>
-                                                        <select id="role-select" name="role" defaultValue={user.role}>
+                                                        <label htmlFor={"role-select" + i} className="sr-only">Role</label>
+                                                        <select id={"role-select" + i} name={`role-${user.id}`} defaultValue={user.role}>
                                                             <option value="ADMIN" >Admin</option>
                                                             <option value="MEMBER" >Member</option>
                                                         </select>
                                                     </div>
                                                 )}
-                                                <input type='hidden' name="id" value={user.id} />
+
                                             </div>
                                         ))}
                                     </Form>
@@ -208,8 +252,9 @@ function EditUserDialog({ isOpen, setIsOpen, updateAttribute, selectedUsers }:
                                         name="_action"
                                         value="edit"
                                         form="user-update"
+                                        disabled={isBusy}
                                     >
-                                        Save Changes
+                                        {isBusy ? "Saving Changes" : "Save Changes"}
                                     </button>
                                     <button
                                         type="button"

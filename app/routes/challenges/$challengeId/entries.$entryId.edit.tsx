@@ -1,16 +1,16 @@
 import type { LoaderFunction, ActionFunction } from "@remix-run/node";
 import { json, redirect } from "@remix-run/node";
-import { Form, useActionData, useParams, useSearchParams, useMatches, useCatch, useLoaderData } from "@remix-run/react";
+import { Form, useActionData, useParams, useMatches, useCatch, useLoaderData } from "@remix-run/react";
 import * as React from "react";
 
 import type { Entry } from "~/models/challenge.server"
 import { getEntryById, updateEntry } from "~/models/challenge.server";
 import { requireUserId } from "~/session.server";
 
-import type { challengeMatchesData } from "~/routes/challenges/$challengeId/index";
+import type { LoaderData as challengeMatchesData } from "~/routes/challenges/$challengeId";
 import invariant from "tiny-invariant";
-import { format, getYear } from "date-fns";
-import { stripTimeZone } from "~/utils";
+import { format, getDate, getYear } from "date-fns";
+import { parseDateStringFromServer, prepareDateForServer } from "~/utils";
 
 
 type ActionData = {
@@ -20,11 +20,8 @@ type ActionData = {
         challengeId?: string;
         activityId?: string;
         date?: string;
-        month?: string;
-        day?: string;
-    },
-    month?: string;
-    day?: string;
+
+    }
 }
 
 type LoaderData = {
@@ -52,17 +49,23 @@ export const action: ActionFunction = async ({ request, params }) => {
     const formData = await request.formData();
     const amount = Number(formData.get("amount"));
     const notes = formData.get("notes");
-    const year = formData.get("year");
-    const month = formData.get("month");
-    const day = formData.get("day");
-    if (typeof month !== 'string' || month.length == 0) {
+    const date = formData.get('activityDate');
+    if (typeof date !== 'string' || date.length == 0) {
         return json<ActionData>(
-            { errors: { amount: "Whoops! Looks like something went wrong." }, month: `${month}`, day: `${day}` },
+            { errors: { date: "Whoops! The activity date is missing." } },
             { status: 400 }
         );
     }
 
-    const date = new Date(`${year}/${months[month]}/${day}`)
+    const activityDate = new Date(date);
+    if (activityDate instanceof Date && isNaN(activityDate.getTime())) {
+        // not a valid date
+        return json<ActionData>(
+            { errors: { date: "Whoops! There is something wrong with the entry date." } },
+            { status: 400 }
+        );
+    }
+
 
     //hidden fields
     const challengeId = params.challengeId;
@@ -71,35 +74,35 @@ export const action: ActionFunction = async ({ request, params }) => {
 
 
 
-    if (Number.isNaN(amount) || amount <= 0) {
+    if (Number.isNaN(amount) || amount < 0) {
         return json<ActionData>(
-            { errors: { amount: "Whoops! Looks like you forgot to enter an amount." }, month: `${month}`, day: `${day}` },
+            { errors: { amount: "Whoops! Looks like you forgot to enter an amount." } },
             { status: 400 }
         );
     }
 
     if (typeof notes !== "string") {
         return json<ActionData>(
-            { errors: { notes: "Notes are required." }, month: `${month}`, day: `${day}` },
+            { errors: { notes: "Notes are required." } },
             { status: 400 }
         )
     }
 
     if (typeof challengeId !== "string" || challengeId.length === 0) {
         return json<ActionData>(
-            { errors: { challengeId: "Challenge ID is required." }, month: `${month}`, day: `${day}` },
+            { errors: { challengeId: "Challenge ID is required." } },
             { status: 400 }
         )
     }
 
     if (typeof activityId !== "string" || activityId.length === 0) {
         return json<ActionData>(
-            { errors: { activityId: "Activity ID is required." }, month: `${month}`, day: `${day}` },
+            { errors: { activityId: "Activity ID is required." } },
             { status: 400 });
     }
     if (typeof entryId !== "string" || entryId.length === 0) {
         return json<ActionData>(
-            { errors: { activityId: "Entry ID is required." }, month: `${month}`, day: `${day}` },
+            { errors: { activityId: "Entry ID is required." } },
             { status: 400 });
     }
 
@@ -110,7 +113,7 @@ export const action: ActionFunction = async ({ request, params }) => {
         notes,
         challengeId,
         activityId,
-        date: date
+        date: activityDate
 
     });
 
@@ -133,12 +136,10 @@ export default function EditChallengeEntryPage() {
     const actionData = useActionData() as ActionData;
     const loaderData = useLoaderData() as LoaderData;
 
-    const strippedEntryDate = stripTimeZone(loaderData.entry.date.toString()).split("-").join("/");
+    const activityDate = parseDateStringFromServer(loaderData.entry.date.toString());
+    const month = format(new Date(activityDate), "MMM");
+    const day = getDate(new Date(activityDate));
 
-    const month = format(new Date(strippedEntryDate), "MMM");
-    const day = new Date(loaderData.entry.date).getUTCDate();
-    const activityDate = new Date(loaderData.entry.date);
-    const updatedDate = new Date(activityDate.getFullYear(), activityDate.getUTCMonth() + 1, activityDate.getUTCDate());
     const matches = useMatches();
     const params = useParams();
 
@@ -215,10 +216,8 @@ export default function EditChallengeEntryPage() {
                 )}
             </div>
             <div>
-                <input type={"hidden"} name="year" value={getYear(new Date(loaderData.entry.date))} />
-                <input type="hidden" name="month" value={month} />
-                <input type="hidden" name="day" value={new Date(loaderData.entry.date).getUTCDate() || ""} />
-                <input type="hidden" name="activityDate" value={updatedDate.toISOString()} />
+
+                <input type="hidden" name="activityDate" value={prepareDateForServer(new Date(activityDate))} />
                 <input type="hidden" name="activityId" value={matchesData.challenge?.activity[0].activityId || ""} />
             </div>
             <div className="text-right">

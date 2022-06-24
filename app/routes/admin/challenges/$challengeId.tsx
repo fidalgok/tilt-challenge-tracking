@@ -1,11 +1,13 @@
-import { Link, NavLink, Outlet, useLoaderData } from "@remix-run/react";
-import { json, LoaderFunction, redirect } from "@remix-run/node";
-import { adminGetChallenge, ChallengeWithActivitiesUsers, Entry } from "~/models/challenge.server";
+import { Outlet, useLoaderData } from "@remix-run/react";
+import { json, LoaderFunction } from "@remix-run/node";
+import { adminGetChallenge, ChallengeWithActivitiesUsers } from "~/models/challenge.server";
 import invariant from "tiny-invariant";
 
 
 
 import { getUser } from "~/session.server";
+import NavBar from "~/components/NavBar";
+import NavBarLink from "~/components/NavBarLink";
 
 type LoaderData = {
     challenge: ChallengeWithActivitiesUsers
@@ -25,22 +27,20 @@ export const loader: LoaderFunction = async ({ request, params }) => {
 
 
 export default function AdminChallengesViewChallengePage() {
-    const data = useLoaderData();
+    const data = useLoaderData() as LoaderData;
     return (
         <div>
-            <nav className="flex items-center justify-between py-4 ">
-                <NavLink className={({ isActive }) =>
-                    isActive ? "border-b-2  border-slate-600" : undefined
-                } to="./entries">Challenge Entries</NavLink>
-            </nav>
+            <h3 className="text-3xl font-bold">{data.challenge.title}</h3>
+            <NavBar>
+                <NavBarLink to={`./`}>Challenge Details</NavBarLink>
+                <NavBarLink to={`./entries`}>Challenge Entries</NavBarLink>
+                <NavBarLink to={`./users`}>Challenge Members</NavBarLink>
+            </NavBar>
 
-            <p>
-                Challenge details here.
-                can edit certain fields if there haven't been entries yet.
-            </p>
+
             <Outlet />
 
-            <pre><code>{JSON.stringify(data, null, 2)}</code></pre>
+            <pre className="whitespace-pre-wrap"><code>{JSON.stringify(data, null, 2)}</code></pre>
         </div>
     );
 }
