@@ -76,12 +76,25 @@ export default function AdminUsersIndexPage() {
         setUpdateAttribute(attribute);
         openModal()
     }
-    function handleSelectAllUsers() {
+    function handleSelectAllUsers(e: React.ChangeEvent<HTMLInputElement>) {
         const inputList = document.querySelectorAll('input[name="userSelect"]') as NodeListOf<HTMLInputElement>
+        let userIds = [] as selectedUsersList;
         inputList.forEach((input) => {
-            if (input && input?.checked)
-                return input.checked = !input.checked
-        })
+            if (input && input.type === 'checkbox') {
+                userIds = [...userIds, input.value]
+                if (e.target.checked) {
+                    input.checked = true;
+
+                } else {
+                    input.checked = false;
+                }
+            }
+        });
+        if (e.target.checked) {
+            setSelectedUsers(userIds)
+        } else {
+            setSelectedUsers([])
+        }
     }
 
     useEffect(() => {
@@ -118,7 +131,7 @@ export default function AdminUsersIndexPage() {
                                 name="userSelectAll"
                                 type="checkbox"
                                 id="userSelectAll"
-                                onChange={(e) => handleSelectAllUsers()}
+                                onChange={(e) => handleSelectAllUsers(e)}
                             />
                         </th>
                         <th className="sticky top-0 bg-slate-100 border-b border-slate-300 text-left p-3">First Name</th>
