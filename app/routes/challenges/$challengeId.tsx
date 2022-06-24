@@ -3,15 +3,12 @@ import { Outlet, useCatch, useLoaderData } from "@remix-run/react";
 import invariant from "tiny-invariant";
 import type { LoaderFunction } from "@remix-run/node";
 
-
-
 import { Entry, ChallengeWithActivities, getChallengeLeaderboard } from "~/models/challenge.server";
 import { getChallengeEntries, getChallenge, getTotalSteps } from "~/models/challenge.server";
 
 import { requireUserId } from "~/session.server";
 import NavBar from "~/components/NavBar";
 import NavBarLink from "~/components/NavBarLink";
-
 
 
 export type LoaderData = {
@@ -22,6 +19,7 @@ export type LoaderData = {
         steps: number;
     }[];
     totalSteps: number;
+
 }
 
 type LeaderBoardReduceReturnType = {
@@ -73,6 +71,7 @@ export const loader: LoaderFunction = async ({ request, params }) => {
 
 export default function ChallengeDetailsPage() {
     const data = useLoaderData() as LoaderData;
+
 
 
     return (

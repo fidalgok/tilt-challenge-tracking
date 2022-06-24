@@ -4,7 +4,7 @@ import { add, eachDayOfInterval, endOfMonth, endOfWeek, format, getDay, isEqual,
 import { Dialog, Menu, Transition } from "@headlessui/react";
 import { ChevronLeftIcon, ChevronRightIcon, DotsVerticalIcon } from "@heroicons/react/outline";
 
-import { classNames, parseDateStringFromServer, useWindowSize } from "~/utils";
+import { classNames, parseDateStringFromServer, useTimeZoneOffset, useWindowSize } from "~/utils";
 import { Entry, User } from "@prisma/client";
 
 import type { EntriesWithUserProfiles } from "~/models/challenge.server";
@@ -23,7 +23,7 @@ type LoaderData = {
 
 export function AdminEntriesCalendar({ entries }: { entries: Entry[] }) {
     // eventually will come from the server
-
+    const timezoneOffsets = useTimeZoneOffset();
     const [searchParams] = useSearchParams();
     const { maybeMobile } = useLoaderData() as LoaderData;
     const screenWidth = useWindowSize();
@@ -35,9 +35,9 @@ export function AdminEntriesCalendar({ entries }: { entries: Entry[] }) {
 
 
     let today = startOfToday();
-    let localOffset = today.getTimezoneOffset() / 60;
 
     //local state
+    const [hasLoaded, setHasLoaded] = useState(false);
     let [selectedDay, setSelectedDay] = useState(today)
     let [currentMonth, setCurrentMonth] = useState(format(today, 'MMM-yyyy'))
     let [currentWeek, setCurrentWeek] = useState(format(today, 'ww'))
@@ -98,9 +98,15 @@ export function AdminEntriesCalendar({ entries }: { entries: Entry[] }) {
     )
 
     useEffect(() => {
-        console.log(localOffset)
-        setSelectedDay(startOfToday());
-    }, [localOffset])
+
+        if (timezoneOffsets.localTimezoneOffset) {
+            // we have the local timezone. It's safe to assume we're looking at the right date
+            setHasLoaded(true)
+        }
+
+
+
+    }, [timezoneOffsets.localTimezoneOffset])
 
 
     return (
@@ -159,7 +165,7 @@ export function AdminEntriesCalendar({ entries }: { entries: Entry[] }) {
                                         type="button"
                                         onClick={() => setSelectedDay(day)}
                                         className={classNames(
-                                            isEqual(day, selectedDay) && 'text-white',
+                                            hasLoaded && isEqual(day, selectedDay) && 'text-white',
                                             !isEqual(day, selectedDay) &&
                                             isToday(day) && 'text-red-500',
                                             !isEqual(day, selectedDay) &&
@@ -170,12 +176,12 @@ export function AdminEntriesCalendar({ entries }: { entries: Entry[] }) {
                                             !isToday(day) &&
                                             !isSameMonth(day, firstDayCurrentMonth) &&
                                             'text-gray-400',
-                                            isEqual(day, selectedDay) && isToday(day) && 'bg-red-500',
+                                            hasLoaded && isEqual(day, selectedDay) && isToday(day) && 'bg-red-500',
                                             isEqual(day, selectedDay) &&
                                             !isToday(day) &&
                                             'bg-gray-900',
                                             !isEqual(day, selectedDay) && 'hover:bg-gray-200',
-                                            (isEqual(day, selectedDay) || isToday(day)) &&
+                                            hasLoaded && (isEqual(day, selectedDay) || isToday(day)) &&
                                             'font-semibold',
                                             'mx-auto flex h-8 w-8 items-center justify-center rounded-full'
                                         )}

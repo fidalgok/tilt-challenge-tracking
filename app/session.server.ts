@@ -84,6 +84,7 @@ export async function createUserSession({
           ? 60 * 60 * 24 * 7 // 7 days
           : undefined,
       }),
+
     },
   });
 }

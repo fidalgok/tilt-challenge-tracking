@@ -33,11 +33,15 @@ export const meta: MetaFunction = () => ({
 
 type LoaderData = {
   user: Awaited<ReturnType<typeof getUser>>;
+  serverTimezoneOffset: number;
 };
 
+
 export const loader: LoaderFunction = async ({ request }) => {
+  const serverTimezoneOffset = new Date().getTimezoneOffset() / 60;
   return json<LoaderData>({
     user: await getUser(request),
+    serverTimezoneOffset
   });
 };
 

@@ -76,6 +76,44 @@ export function capitalize(str: string) {
 }
 
 // Date utils...
+export interface TimeZoneOffsets {
+  localTimezoneOffset: number;
+  serverTimezoneOffset: number;
+}
+
+type RootLoaderData = {
+  serverTimezoneOffset: number;
+}
+export function useTimeZoneOffset(): TimeZoneOffsets {
+  const localTimezoneOffset = new Date().getTimezoneOffset() / 60;
+  const [timezoneOffsets, setTimezoneOffsets] = useState({} as TimeZoneOffsets);
+
+  const rootData = useMatchesData("root") as RootLoaderData;
+  const serverTimezoneOffset = rootData?.serverTimezoneOffset || 0;
+
+  useEffect(() => {
+    const date = new Date();
+    function padOffset(offset: number) {
+
+      if (offset < 0) {
+        let tempOffset = offset.toString().slice(1);
+        return tempOffset.length === 1 ? `0${tempOffset}00` : `0${tempOffset}0`;
+      }
+      let stringOffset = offset.toString();
+      return stringOffset.length === 1 ? `0${stringOffset}00` : `0${stringOffset}0`;
+    }
+    const localUTCOffset = padOffset(localTimezoneOffset);
+    const localTime = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}T${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}${localTimezoneOffset > 0 ? '-' : '+'}${localUTCOffset}`;
+
+    const serverUTCOffset = padOffset(serverTimezoneOffset)
+    const serverTime = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}T${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}${rootData?.serverTimezoneOffset > 0 ? '-' : '+'}${serverUTCOffset}`;
+
+
+    setTimezoneOffsets({ localTimezoneOffset, serverTimezoneOffset });
+  }, [serverTimezoneOffset]);
+
+  return timezoneOffsets;
+}
 
 export function daysBetween(start: Date, end: Date): number {
   start = new Date(start);
@@ -90,10 +128,19 @@ export function daysFromToday(endDate: Date): number {
   return daysBetween(start, endDate);
 }
 
-export function UTCFormattedDate(date: Date): string {
-  let month = date.getUTCMonth() + 1 < 10 ? `0${date.getUTCMonth() + 1}` : date.getUTCMonth() + 1;
-  let day = date.getUTCDate() < 10 ? `0${date.getUTCDate()}` : date.getUTCDate();
-  return date.getUTCFullYear() + "-" + (month) + "-" + day;
+export function UTCFormattedDate(date: number): string
+export function UTCFormattedDate(date: Date): string
+
+export function UTCFormattedDate(date: Date | number): string {
+  if (typeof date === "number") {
+    date = new Date(date);
+    let month = date.getMonth() + 1 < 10 ? `0${date.getMonth() + 1}` : date.getMonth() + 1;
+    let day = date.getDate() < 10 ? `0${date.getDate()}` : date.getDate();
+    return date.getFullYear() + "-" + (month) + "-" + day;
+  }
+  let month = date.getMonth() + 1 < 10 ? `0${date.getMonth() + 1}` : date.getMonth() + 1;
+  let day = date.getDate() < 10 ? `0${date.getDate()}` : date.getDate();
+  return date.getFullYear() + "-" + (month) + "-" + day;
 }
 
 export function getUTCDate(date: number): number {

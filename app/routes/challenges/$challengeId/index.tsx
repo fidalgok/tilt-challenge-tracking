@@ -3,16 +3,17 @@ import { Form, Link, useActionData, useTransition } from "@remix-run/react";
 import { ActionFunction, json } from "@remix-run/node";
 import { deleteEntry } from "~/models/challenge.server";
 import { requireUser } from "~/session.server";
-import { daysBetween, useMatchesData, UTCFormattedDate, stripTimeZone, parseDateStringFromServer, capitalize } from "~/utils";
+import { daysBetween, useMatchesData, UTCFormattedDate, stripTimeZone, parseDateStringFromServer, capitalize, useTimeZoneOffset } from "~/utils";
 
 import { PlusIcon, PencilIcon } from '@heroicons/react/outline'
-import { format, isSameDay, isToday, parseISO, startOfToday, subHours } from "date-fns";
+import { addHours, format, isSameDay, isToday, startOfDay, startOfToday, subHours } from "date-fns";
 import { Disclosure } from "@headlessui/react";
 import { ChevronUpIcon } from "@heroicons/react/solid";
 
 
 
 import type { LoaderData } from "../$challengeId"
+import { useEffect, useState } from "react";
 
 type ActionData = {
     errors?: {
@@ -60,10 +61,12 @@ export default function ChallengeEntries() {
     let busy = transition.submission;
     const matches = useMatchesData('routes/challenges/$challengeId');
     const { challenge, entries, ...data } = matches as LoaderData;
+    const timezoneOffsets = useTimeZoneOffset();
+    const [hasLoaded, setHasLoaded] = useState(false); // this uses the useEffect to see if we've loaded on the client first.
     const challengeStart = new Date(challenge?.startDate ? parseDateStringFromServer(challenge.startDate.toString()) : "now");
     const challengeEnd = new Date(challenge?.endDate ? parseDateStringFromServer(challenge.endDate.toString()) : "now");
-    const today = startOfToday();
-    const todayMonth = format(today, 'MMM');
+    const today = startOfToday()
+
     const entryForToday = findEntrybyDate(today);
 
 
@@ -73,19 +76,23 @@ export default function ChallengeEntries() {
     const challengeDaysArray = Array.from({ length: challengeDays }, (_, i) =>
     ({
         day: i + 1,
-        date: challengeStart.getTime() + ((i) * 24 * 60 * 60 * 1000),
-        strippedDate: stripTimeZone(new Date(challengeStart.getTime() + ((i) * 24 * 60 * 60 * 1000)).toISOString()),
-        dateAsUTCString: UTCFormattedDate(new Date(challengeStart.getTime() + ((i) * 24 * 60 * 60 * 1000))),
+        date: new Date(parseDateStringFromServer(challengeStart.toString())).getTime() + ((i) * 24 * 60 * 60 * 1000),
+        strippedDate: new Date(parseDateStringFromServer(challengeStart.toString())).getTime() + ((i) * 24 * 60 * 60 * 1000),
+        dateAsUTCString: UTCFormattedDate(new Date(parseDateStringFromServer(challengeStart.toString())).getTime() + ((i) * 24 * 60 * 60 * 1000)),
         formattedDate: new Date(challengeStart.getTime() + ((i) * 24 * 60 * 60 * 1000)).toLocaleDateString('en-US', {
             month: 'short',
             day: 'numeric',
         }),
 
     }));
-    console.log(challengeDaysArray);
-    console.log(challengeStart)
-    console.log(entryForToday);
-    console.log(entries)
+    //console.log(challengeDaysArray);
+    // console.log(challengeStart)
+    // console.log(entryForToday);
+    // //console.log(entries)
+    // console.log(today)
+    // console.log(hasLoaded)
+    // console.log(startOfDay(new Date()))
+    // console.log(dayFromClient)
 
 
     function findEntrybyDate(date: Date): Entry | undefined {
@@ -100,7 +107,16 @@ export default function ChallengeEntries() {
         return entry;
     }
 
+    useEffect(() => {
 
+        if (timezoneOffsets.localTimezoneOffset) {
+            // we have the local timezone. It's safe to assume we're looking at the right date
+            setHasLoaded(true)
+        }
+
+
+
+    }, [timezoneOffsets.localTimezoneOffset])
 
     return (
         <>
@@ -115,7 +131,7 @@ export default function ChallengeEntries() {
 
                 <div className="flex justify-between mb-3">
                     <h3 className="font-bold text-lg md:text-xl ">Challenge Entries</h3>
-                    {entryForToday ?
+                    {(hasLoaded && entryForToday) ?
                         (
                             <Link to={`entries/${entryForToday.id}/edit`}>
                                 <div className="flex items-center">
@@ -125,7 +141,7 @@ export default function ChallengeEntries() {
                             </Link>
                         ) :
                         (
-                            <Link to={`entries/new?month=${todayMonth}&day=${today.getDate()}`}>
+                            <Link to={`entries/new?entries/new?date=${UTCFormattedDate(today)}`}>
                                 <div className="flex items-center">
 
                                     <PlusIcon className="h-5 w-5 text-slate-500 inline" />{" "} <span>Quick Add For Today</span>
@@ -151,21 +167,18 @@ export default function ChallengeEntries() {
 
                                 const entry = findEntrybyDate(new Date(strippedDate))
 
-                                if (entry) {
-                                    console.log(entry)
-                                }
-
-
                                 return (
                                     <tr
-                                        id={`${dateAsUTCString}`}
-                                        key={`${dateAsUTCString}`}
+                                        id={`${strippedDate}`}
+                                        key={`${strippedDate}`}
                                         className="hover:bg-slate-50 border-b border-slate-100"
                                     >
-                                        <td className="p-3">{isToday(date) ?
-                                            (<span className="w-16 h-16 flex items-center justify-center bg-slate-800 text-white aspect-square rounded-full ">{day}</span>) :
-                                            (<span className="w-16 h-16 flex items-center justify-center aspect-square rounded-full ">{day}</span>)
-                                        }
+                                        <td className="p-3">
+                                            {!hasLoaded && (<span></span>)}
+                                            {(hasLoaded && isSameDay(date, today)) ?
+                                                (<span className="w-16 h-16 flex items-center justify-center bg-slate-800 text-white aspect-square rounded-full ">{day}</span>) :
+                                                (<span className="w-16 h-16 flex items-center justify-center aspect-square rounded-full ">{day}</span>)
+                                            }
                                         </td>
                                         <td className="p-3 w-fit">
                                             <div className="flex flex-col items-start">
@@ -183,12 +196,13 @@ export default function ChallengeEntries() {
                                             </div>
 
                                         </td>
-                                        {!entry && (
+                                        {!hasLoaded && (<td className="p-3"></td>)}
+                                        {(hasLoaded && !entry) && (
                                             <td className="p-3">
                                                 <Link className="px-2" to={`entries/new?date=${dateAsUTCString}`}>Add</Link>
                                             </td>
                                         )}
-                                        {entry && (
+                                        {(hasLoaded && entry) && (
                                             <td className="p-3 ">
                                                 <div className="flex flex-col md:flex-row items-start justify-between">
 

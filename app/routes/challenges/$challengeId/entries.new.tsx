@@ -161,6 +161,7 @@ export default function NewChallengeEntryPage() {
             notesRef.current?.focus();
         }
     }, [actionData]);
+
     React.useEffect(() => {
         if (foundEntry?.id) {
             navigate(`/challenges/${params.challengeId}/entries/${foundEntry.id}/edit`, { replace: true });
