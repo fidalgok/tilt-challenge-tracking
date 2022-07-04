@@ -19,7 +19,7 @@ export type LoaderData = {
         steps: number;
     }[];
     totalSteps: number;
-
+    maybeMobile: boolean;
 }
 
 type LeaderBoardReduceReturnType = {
@@ -30,6 +30,9 @@ type LeaderBoardReduceReturnType = {
 
 export const loader: LoaderFunction = async ({ request, params }) => {
     const userId = await requireUserId(request);
+    // get request headers
+    const userAgent = request.headers.get("user-agent");
+    const maybeMobile = userAgent ? userAgent.toLowerCase().indexOf('mobi') > -1 : false;
     invariant(params.challengeId, "challengeId not found");
 
     const challenge = await getChallenge({ id: params.challengeId, userId });
@@ -64,7 +67,7 @@ export const loader: LoaderFunction = async ({ request, params }) => {
         });
 
 
-    return json<LoaderData>({ challenge, entries: entries, totalSteps: aggregation._sum.amount || 0, leaderboard });
+    return json<LoaderData>({ challenge, entries: entries, totalSteps: aggregation._sum.amount || 0, leaderboard, maybeMobile });
 
 }
 

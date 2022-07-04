@@ -1,41 +1,29 @@
 import { Form, Link, useLoaderData, useSearchParams } from "@remix-run/react";
-import { Fragment, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { add, eachDayOfInterval, endOfMonth, endOfWeek, format, getDay, isEqual, isSameDay, isSameMonth, isToday, parse, parseISO, startOfToday, startOfWeek } from "date-fns";
 import { Dialog, Menu, Transition } from "@headlessui/react";
-import { ChevronLeftIcon, ChevronRightIcon, DotsVerticalIcon } from "@heroicons/react/outline";
+import { ChevronLeftIcon, ChevronRightIcon, DotsVerticalIcon, PlusIcon } from "@heroicons/react/outline";
 
-import { classNames, parseDateStringFromServer, useWindowSize } from "~/utils";
+import { classNames, parseDateStringFromServer, useTimeZoneOffset, useWindowSize, UTCFormattedDate } from "~/utils";
 import { Entry, User } from "@prisma/client";
 
 import type { EntriesWithUserProfiles } from "~/models/challenge.server";
 
-type LoaderData = {
-    entries: (Entry & {
-        user: User & {
-            profile: {
-                firstName: string;
-                lastName: string;
-            } | null;
-        };
-    })[],
-    maybeMobile: boolean;
-}
 
-export function AdminEntriesCalendar({ entries }: { entries: Entry[] }) {
-    // eventually will come from the server
-
+export function EntriesCalendar({ entries, maybeMobile }: { entries: Entry[], maybeMobile: boolean }) {
+    const timezoneOffsets = useTimeZoneOffset();
     const [searchParams] = useSearchParams();
-    const { maybeMobile } = useLoaderData() as LoaderData;
+
     const screenWidth = useWindowSize();
     const view = searchParams.get("view") === "week" ? "week" :
         maybeMobile ? "week" :
             (screenWidth?.width && screenWidth.width < 400) ? "week" :
                 "month";
 
-
-
     let today = startOfToday();
+
     //local state
+    let [hasLoaded, setHasLoaded] = useState(false);
     let [selectedDay, setSelectedDay] = useState(today)
     let [currentMonth, setCurrentMonth] = useState(format(today, 'MMM-yyyy'))
     let [currentWeek, setCurrentWeek] = useState(format(today, 'ww'))
@@ -91,13 +79,24 @@ export function AdminEntriesCalendar({ entries }: { entries: Entry[] }) {
 
     let selectedDayEntries = entries.filter((entry) => {
 
-        return isSameDay(parseISO(entry.date.toString()), selectedDay)
+        return isSameDay(new Date(parseDateStringFromServer(entry.date.toString())), selectedDay)
     }
     )
 
+    useEffect(() => {
 
+        if (timezoneOffsets.localTimezoneOffset) {
+            // we have the local timezone. It's safe to assume we're looking at the right date
+            setHasLoaded(true)
+        }
+
+
+
+    }, [timezoneOffsets.localTimezoneOffset])
+
+    console.log('rendering calendar')
     return (
-        <div className="pt-16">
+        <div className="pt-4 pb-16">
             <div className="max-w-md px-4 mx-auto sm:px-7 md:max-w-4xl md:px-6">
                 <div className="md:grid md:grid-cols-2 md:divide-x md:divide-gray-200">
                     <div className="md:pr-14">
@@ -152,10 +151,9 @@ export function AdminEntriesCalendar({ entries }: { entries: Entry[] }) {
                                         type="button"
                                         onClick={() => setSelectedDay(day)}
                                         className={classNames(
-                                            isEqual(day, selectedDay) && 'text-white',
+                                            hasLoaded && isEqual(day, selectedDay) && 'text-white',
                                             !isEqual(day, selectedDay) &&
-                                            isToday(day) &&
-                                            'text-red-500',
+                                            isToday(day) && 'text-red-500',
                                             !isEqual(day, selectedDay) &&
                                             !isToday(day) &&
                                             isSameMonth(day, firstDayCurrentMonth) &&
@@ -164,12 +162,12 @@ export function AdminEntriesCalendar({ entries }: { entries: Entry[] }) {
                                             !isToday(day) &&
                                             !isSameMonth(day, firstDayCurrentMonth) &&
                                             'text-gray-400',
-                                            isEqual(day, selectedDay) && isToday(day) && 'bg-red-500',
+                                            hasLoaded && isEqual(day, selectedDay) && isToday(day) && 'bg-red-500',
                                             isEqual(day, selectedDay) &&
                                             !isToday(day) &&
                                             'bg-gray-900',
                                             !isEqual(day, selectedDay) && 'hover:bg-gray-200',
-                                            (isEqual(day, selectedDay) || isToday(day)) &&
+                                            hasLoaded && (isEqual(day, selectedDay) || isToday(day)) &&
                                             'font-semibold',
                                             'mx-auto flex h-8 w-8 items-center justify-center rounded-full'
                                         )}
@@ -181,7 +179,7 @@ export function AdminEntriesCalendar({ entries }: { entries: Entry[] }) {
 
                                     <div className="w-1 h-1 mx-auto mt-1">
                                         {entries.some((entry) =>
-                                            isSameDay(parseISO(entry.date.toString()), day)
+                                            isSameDay(new Date(parseDateStringFromServer(entry.date.toString())), day)
                                         ) && (
                                                 <div className="w-1 h-1 rounded-full bg-sky-500"></div>
                                             )}
@@ -203,7 +201,12 @@ export function AdminEntriesCalendar({ entries }: { entries: Entry[] }) {
                                     <EntryItem entry={entry} key={entry.id} />
                                 ))
                             ) : (
-                                <p>No entries for today.</p>
+                                <Link to={`entries/new?date=${UTCFormattedDate(selectedDay)}`}>
+                                    <div className="flex items-center">
+
+                                        <PlusIcon className="h-5 w-5 text-gray-900 inline" />{" "} <span className="text-gray-900">Add Entry</span>
+                                    </div>
+                                </Link>
                             )}
                         </ol>
                     </section>
@@ -215,8 +218,10 @@ export function AdminEntriesCalendar({ entries }: { entries: Entry[] }) {
 
 function EntryItem({ entry }: { entry: Partial<EntriesWithUserProfiles> & Pick<Entry, 'date'> }) {
     let entryDate = parseDateStringFromServer(entry.date.toString());
-    let startDateTime = parseISO(entryDate);
-    console.log({ entryDate, startDateTime, entry })
+    // some extra state to keep the menu open while the delete dialog is also open
+    let [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+
+    console.log('entry Item')
 
     return (
         <li className="flex items-center px-4 py-2 space-x-4 group rounded-xl focus-within:bg-gray-100 hover:bg-gray-100">
@@ -224,63 +229,85 @@ function EntryItem({ entry }: { entry: Partial<EntriesWithUserProfiles> & Pick<E
 
             <div className="flex-auto">
                 <p className="text-gray-900">{entry.amount}</p>
-                <p>{entry?.user?.profile?.firstName}{" "}{entry?.user?.profile?.lastName}</p>
+
                 <p className="mt-0.5">
-                    <time dateTime={entryDate}>
-                        {format(startDateTime, 'h:mm a')}
-                    </time>
+                    {entry?.notes}
                 </p>
             </div>
             <Menu
                 as="div"
                 className="relative "
             >
-                <div>
-                    <Menu.Button className="-m-2 flex items-center rounded-full p-1.5 text-gray-500 hover:text-gray-600">
-                        <span className="sr-only">Open options</span>
-                        <DotsVerticalIcon className="w-6 h-6" aria-hidden="true" />
-                    </Menu.Button>
-                </div>
+                {({ open }) => (
 
-                <Transition
-                    as={Fragment}
-                    enter="transition ease-out duration-100"
-                    enterFrom="transform opacity-0 scale-95"
-                    enterTo="transform opacity-100 scale-100"
-                    leave="transition ease-in duration-75"
-                    leaveFrom="transform opacity-100 scale-100"
-                    leaveTo="transform opacity-0 scale-95"
-                >
-                    <Menu.Items className="absolute right-0 z-10 mt-2 origin-top-right bg-white rounded-md shadow-lg w-36 ring-1 ring-black ring-opacity-5 focus:outline-none">
-                        <div className="py-1">
-                            <Menu.Item >
-                                {({ active }) => (
-                                    <>
+                    <>
+
+                        <div>
+                            <Menu.Button className="-m-2 flex items-center rounded-full p-1.5 text-gray-500 hover:text-gray-600">
+                                <span className="sr-only">Open options</span>
+                                <DotsVerticalIcon className="w-6 h-6" aria-hidden="true" />
+                            </Menu.Button>
+                        </div>
+
+                        {(open || isDeleteDialogOpen) && (
+                            <Transition
+                                as={Fragment}
+                                show={open || isDeleteDialogOpen}
+                                enter="transition ease-out duration-100"
+                                enterFrom="transform opacity-0 scale-95"
+                                enterTo="transform opacity-100 scale-100"
+                                leave="transition ease-in duration-75"
+                                leaveFrom="transform opacity-100 scale-100"
+                                leaveTo="transform opacity-0 scale-95"
+                            >
+
+
+                                <Menu.Items
+                                    className="absolute right-0 z-10 mt-2 origin-top-right bg-white rounded-md shadow-lg w-36 ring-1 ring-black ring-opacity-5 focus:outline-none"
+                                    static={true}
+
+                                >
+                                    <div className="py-1">
+                                        <Menu.Item>
+                                            {({ active }) => (
+                                                <Link
+                                                    to={`./entries/${entry.id}/edit`}
+                                                    className={classNames(
+                                                        active ? 'bg-gray-100 text-gray-900' : 'text-gray-700',
+                                                        'block px-4 py-2 text-sm'
+                                                    )}
+                                                >
+                                                    Edit
+                                                </Link>
+                                            )}
+                                        </Menu.Item>
+
                                         <DeleteConfirmation
+                                            setIsDeleteDialogOpen={setIsDeleteDialogOpen}
                                             entryId={entry.id || ""}
+                                            entryDate={entryDate}
                                             user={{ id: entry?.user?.id || '', profile: { firstName: entry?.user?.profile?.firstName || '' } }}
-                                            active={active}
+
                                         />
 
-                                    </>
-                                )}
-                            </Menu.Item>
-                            <Menu.Item>
-                                {({ active }) => (
-                                    <Link
-                                        to="./entries"
-                                        className={classNames(
-                                            active ? 'bg-gray-100 text-gray-900' : 'text-gray-700',
-                                            'block px-4 py-2 text-sm'
-                                        )}
-                                    >
-                                        Cancel
-                                    </Link>
-                                )}
-                            </Menu.Item>
-                        </div>
-                    </Menu.Items>
-                </Transition>
+                                        <Menu.Item>
+                                            {({ active }) => (
+                                                <Link
+                                                    to="./"
+                                                    className={classNames(
+                                                        active ? 'bg-gray-100 text-gray-900' : 'text-gray-700',
+                                                        'block px-4 py-2 text-sm'
+                                                    )}
+                                                >
+                                                    Cancel
+                                                </Link>
+                                            )}
+                                        </Menu.Item>
+                                    </div>
+                                </Menu.Items>
+                            </Transition>
+                        )}
+                    </>)}
             </Menu>
         </li>
     )
@@ -296,40 +323,48 @@ let colStartClasses = [
     'col-start-7',
 ]
 
-function DeleteConfirmation({ entryId, user, active }: {
+function DeleteConfirmation({ entryId, user, entryDate, setIsDeleteDialogOpen }: {
     entryId: string, user: Pick<User, "id"> & {
         profile: {
             firstName: string
         }
-    }, active: boolean
+    },
+    setIsDeleteDialogOpen: (isDeleteDialogOpen: boolean) => void,
+    entryDate: string
 }) {
     let [isOpen, setIsOpen] = useState(false)
 
     function closeModal() {
+        console.log('closing modal')
         setIsOpen(false)
+        setIsDeleteDialogOpen(false);
     }
 
     function openModal() {
+        console.log('opening modal')
         setIsOpen(true)
+        setIsDeleteDialogOpen(true)
     }
 
 
     return (
         <>
-            <div className={classNames(
-                active ? 'bg-gray-100 text-gray-900' : 'text-gray-700',
-                'block px-4 py-2 text-sm'
+            <div>
+                <Menu.Item>
+                    {({ active }) => (
 
-            )}>
-                <button
-                    type="button"
-                    onClick={openModal}
-                    className={classNames(
-                        active ? 'bg-gray-100 text-gray-900' : 'text-gray-700',
-                        " text-sm font-medium hover:bg-opacity-30 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75")}
-                >
-                    Delete Entry
-                </button>
+                        <button
+                            type="button"
+                            onClick={openModal}
+                            className={
+                                classNames(
+                                    active ? 'bg-gray-100 text-gray-900' : 'text-gray-700',
+                                    'block w-full text-left px-4 py-2 text-sm')}
+                        >
+                            Delete Entry
+                        </button>
+                    )}
+                </Menu.Item>
             </div>
 
             <Transition appear show={isOpen} as={Fragment}>
@@ -366,7 +401,7 @@ function DeleteConfirmation({ entryId, user, active }: {
                                     </Dialog.Title>
                                     <div className="mt-2">
                                         <p className="text-sm text-gray-500">
-                                            You're about to delete the entry for {user?.profile.firstName}. Are you sure? This action cannot be undone.
+                                            You're about to delete the entry for {format(new Date(entryDate), "MMM dd")}. Are you sure? This action cannot be undone.
                                         </p>
                                     </div>
 
