@@ -1,14 +1,14 @@
-import { Form, Link, useLoaderData, useSearchParams } from "@remix-run/react";
+import { Form, Link, useSearchParams } from "@remix-run/react";
 import { Fragment, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { add, eachDayOfInterval, endOfMonth, endOfWeek, format, getDay, isEqual, isSameDay, isSameMonth, isToday, parse, parseISO, startOfToday, startOfWeek } from "date-fns";
+import { add, compareAsc, eachDayOfInterval, endOfMonth, endOfWeek, format, getDay, isAfter, isBefore, isEqual, isSameDay, isSameMonth, isToday, parse, parseISO, startOfMonth, startOfToday, startOfWeek } from "date-fns";
 import { Dialog, Menu, Transition } from "@headlessui/react";
 import { ChevronLeftIcon, ChevronRightIcon, DotsVerticalIcon, PlusIcon } from "@heroicons/react/outline";
 
-import { classNames, parseDateStringFromServer, useTimeZoneOffset, useWindowSize, UTCFormattedDate } from "~/utils";
+import { classNames, parseDateStringFromServer, useMatchesData, useTimeZoneOffset, useWindowSize, UTCFormattedDate } from "~/utils";
 import { Entry, User } from "@prisma/client";
 
 import type { EntriesWithUserProfiles } from "~/models/challenge.server";
-
+import type { LoaderData } from "~/routes/challenges/$challengeId";
 interface Out {
     top: boolean;
     bottom: boolean;
@@ -45,7 +45,8 @@ function elementDistanceFromBottom(elem: HTMLElement | null) {
 export function EntriesCalendar({ entries, maybeMobile }: { entries: Entry[], maybeMobile: boolean }) {
     const timezoneOffsets = useTimeZoneOffset();
     const [searchParams] = useSearchParams();
-
+    const matches = useMatchesData('routes/challenges/$challengeId')
+    const { challenge } = matches as LoaderData;
     const screenWidth = useWindowSize();
     const view = searchParams.get("view") === "week" ? "week" :
         maybeMobile ? "week" :
@@ -61,6 +62,8 @@ export function EntriesCalendar({ entries, maybeMobile }: { entries: Entry[], ma
     let [currentWeek, setCurrentWeek] = useState(format(today, 'ww'))
     let firstDayCurrentMonth = parse(currentMonth, 'MMM-yyyy', new Date())
     let firstDayCurrentWeek = parse(currentWeek, 'ww', new Date())
+    let challengeStart = new Date(parseDateStringFromServer(challenge.startDate.toString()))
+    let challengeEnd = new Date(parseDateStringFromServer(challenge.endDate.toString()))
 
     let days = eachDayOfInterval({
         start: startOfWeek(view === "month" ? firstDayCurrentMonth : firstDayCurrentWeek),
@@ -68,6 +71,7 @@ export function EntriesCalendar({ entries, maybeMobile }: { entries: Entry[], ma
     });
 
     function goToToday() {
+
         setSelectedDay(today)
         setCurrentMonth(format(today, 'MMM-yyyy'))
         setCurrentWeek(format(today, 'ww'))
@@ -75,15 +79,39 @@ export function EntriesCalendar({ entries, maybeMobile }: { entries: Entry[], ma
 
     function goToPrevious() {
         if (view === "month") {
+            // no need to update the month if it's before the challenge start date
+            let lastDayLastMonth = endOfMonth(add(firstDayCurrentMonth, { months: -1 }))
+
+            if (isBefore(lastDayLastMonth, challengeStart)) {
+                return;
+            }
             previousMonth()
         } else {
+            // no need to update the month if it's before the challenge start date
+            let lastDayLastWeek = endOfWeek(add(firstDayCurrentWeek, { weeks: -1 }))
+
+            if (isBefore(lastDayLastWeek, challengeStart)) {
+                return;
+            }
             previousWeek()
         }
     }
     function goToNext() {
         if (view === "month") {
+            // no need to update the month if it's after the challenge end date
+            let firstDayNextMonth = startOfMonth(add(firstDayCurrentMonth, { months: 1 }))
+
+            if (isBefore(challengeEnd, firstDayNextMonth)) {
+                return;
+            }
             nextMonth()
         } else {
+            // no need to update the month if it's after the challenge end date
+            let firstDayNextWeek = startOfMonth(add(firstDayCurrentWeek, { weeks: 1 }))
+
+            if (isBefore(challengeEnd, firstDayNextWeek)) {
+                return;
+            }
             nextWeek()
         }
     }
@@ -182,6 +210,7 @@ export function EntriesCalendar({ entries, maybeMobile }: { entries: Entry[], ma
                                     <button
                                         type="button"
                                         onClick={() => setSelectedDay(day)}
+                                        disabled={isBefore(day, challengeStart) || isAfter(day, challengeEnd)}
                                         className={classNames(
                                             hasLoaded && isEqual(day, selectedDay) && 'text-white',
                                             !isEqual(day, selectedDay) &&
