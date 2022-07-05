@@ -45,7 +45,7 @@ export default function ChallengeEntriesPage() {
     let transition = useTransition();
     let busy = transition.submission;
     const timezoneOffsets = useTimeZoneOffset();
-    console.log(matches);
+
 
     const today = startOfToday();
     const entryForToday = findEntrybyDate(today);

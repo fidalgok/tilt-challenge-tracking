@@ -1,5 +1,5 @@
 import { Form, Link, useLoaderData, useSearchParams } from "@remix-run/react";
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { add, eachDayOfInterval, endOfMonth, endOfWeek, format, getDay, isEqual, isSameDay, isSameMonth, isToday, parse, parseISO, startOfToday, startOfWeek } from "date-fns";
 import { Dialog, Menu, Transition } from "@headlessui/react";
 import { ChevronLeftIcon, ChevronRightIcon, DotsVerticalIcon, PlusIcon } from "@heroicons/react/outline";
@@ -8,6 +8,38 @@ import { classNames, parseDateStringFromServer, useTimeZoneOffset, useWindowSize
 import { Entry, User } from "@prisma/client";
 
 import type { EntriesWithUserProfiles } from "~/models/challenge.server";
+
+interface Out {
+    top: boolean;
+    bottom: boolean;
+    left: boolean;
+    right: boolean;
+    any: boolean;
+
+}
+
+function isOutOfViewPort(elem: HTMLElement | null): Out | null {
+    if (!elem) return null;
+    // Get element's bounding
+    var bounding = elem.getBoundingClientRect();
+
+    // Check if it's out of the viewport on each side
+    var out = {} as Out;
+    out.top = bounding.top < 0;
+    out.left = bounding.left < 0;
+    out.bottom = bounding.bottom > (window.innerHeight || document.documentElement.clientHeight);
+    out.right = bounding.right > (window.innerWidth || document.documentElement.clientWidth);
+    out.any = out.top || out.left || out.bottom || out.right;
+
+    return out;
+
+};
+function elementDistanceFromBottom(elem: HTMLElement | null) {
+    if (!elem) return null;
+    // Get element's bounding
+    var bounding = elem.getBoundingClientRect();
+    return bounding.bottom - (window.innerHeight || document.documentElement.clientHeight);
+}
 
 
 export function EntriesCalendar({ entries, maybeMobile }: { entries: Entry[], maybeMobile: boolean }) {
@@ -94,7 +126,7 @@ export function EntriesCalendar({ entries, maybeMobile }: { entries: Entry[], ma
 
     }, [timezoneOffsets.localTimezoneOffset])
 
-    console.log('rendering calendar')
+
     return (
         <div className="pt-4 pb-16">
             <div className="max-w-md px-4 mx-auto sm:px-7 md:max-w-4xl md:px-6">
@@ -188,7 +220,7 @@ export function EntriesCalendar({ entries, maybeMobile }: { entries: Entry[], ma
                             ))}
                         </div>
                     </div>
-                    <section className="mt-12 md:mt-0 md:pl-14">
+                    <section className="mt-12 mb-12 md:mt-0 md:pl-14">
                         <h2 className="font-semibold text-gray-900">
                             Entries for{' '}
                             <time dateTime={format(selectedDay, 'yyyy-MM-dd')}>
@@ -220,11 +252,25 @@ function EntryItem({ entry }: { entry: Partial<EntriesWithUserProfiles> & Pick<E
     let entryDate = parseDateStringFromServer(entry.date.toString());
     // some extra state to keep the menu open while the delete dialog is also open
     let [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-
-    console.log('entry Item')
-
+    let [toCloseToBottom, setToCloseToBottom] = useState(false);
+    let ref = useRef<HTMLLIElement>(null);
+    useLayoutEffect(() => {
+        if (ref.current) {
+            window.addEventListener('scroll', () => {
+                let distanceFromBottom = elementDistanceFromBottom(ref.current);
+                if (distanceFromBottom && (distanceFromBottom > -120)) {
+                    // we're too close to render the menu below the list item, need to position it above.
+                    // It's worth noting this number (-120) is completely arbitrary, but it works well for the dropdown menu.
+                    setToCloseToBottom(true);
+                } else if (distanceFromBottom && (distanceFromBottom < -120)) {
+                    // we're far enough away to render the menu below the list item, need to position it below.
+                    setToCloseToBottom(false);
+                }
+            })
+        }
+    }, [ref])
     return (
-        <li className="flex items-center px-4 py-2 space-x-4 group rounded-xl focus-within:bg-gray-100 hover:bg-gray-100">
+        <li ref={ref} className="flex items-center px-4 py-2 space-x-4 group rounded-xl focus-within:bg-gray-100 hover:bg-gray-100">
 
 
             <div className="flex-auto">
@@ -236,7 +282,7 @@ function EntryItem({ entry }: { entry: Partial<EntriesWithUserProfiles> & Pick<E
             </div>
             <Menu
                 as="div"
-                className="relative "
+                className="relative"
             >
                 {({ open }) => (
 
@@ -263,7 +309,7 @@ function EntryItem({ entry }: { entry: Partial<EntriesWithUserProfiles> & Pick<E
 
 
                                 <Menu.Items
-                                    className="absolute right-0 z-10 mt-2 origin-top-right bg-white rounded-md shadow-lg w-36 ring-1 ring-black ring-opacity-5 focus:outline-none"
+                                    className={classNames(toCloseToBottom ? 'absolute right-0 -top-32 z-10 mt-2 origin-top-right bg-white rounded-md shadow-lg w-36 ring-1 ring-black ring-opacity-5 focus:outline-none' : `absolute right-0 z-10 mt-2 origin-top-right bg-white rounded-md shadow-lg w-36 ring-1 ring-black ring-opacity-5 focus:outline-none`)}
                                     static={true}
 
                                 >
@@ -335,13 +381,13 @@ function DeleteConfirmation({ entryId, user, entryDate, setIsDeleteDialogOpen }:
     let [isOpen, setIsOpen] = useState(false)
 
     function closeModal() {
-        console.log('closing modal')
+
         setIsOpen(false)
         setIsDeleteDialogOpen(false);
     }
 
     function openModal() {
-        console.log('opening modal')
+
         setIsOpen(true)
         setIsDeleteDialogOpen(true)
     }
