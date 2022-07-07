@@ -4,9 +4,10 @@ import { NavLink } from "@remix-run/react";
 interface NavBarProps {
     children?: React.ReactNode;
     to: string;
+    end?: boolean;
 }
 
-export default function NavBarLink({ children, to }: NavBarProps) {
+export default function NavBarLink({ children, to, ...props }: NavBarProps) {
     return (
         <NavLink
             to={to}
@@ -16,6 +17,7 @@ export default function NavBarLink({ children, to }: NavBarProps) {
                     "disabled text-gray-500 inline-block border-b-2 border-slate-600" :
                     "inline-block"
             )}
+            {...props}
         >
             {children}
         </NavLink>

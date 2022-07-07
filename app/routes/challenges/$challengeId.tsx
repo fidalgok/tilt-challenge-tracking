@@ -19,7 +19,7 @@ export type LoaderData = {
         steps: number;
     }[];
     totalSteps: number;
-
+    maybeMobile: boolean;
 }
 
 type LeaderBoardReduceReturnType = {
@@ -30,6 +30,9 @@ type LeaderBoardReduceReturnType = {
 
 export const loader: LoaderFunction = async ({ request, params }) => {
     const userId = await requireUserId(request);
+    // get request headers
+    const userAgent = request.headers.get("user-agent");
+    const maybeMobile = userAgent ? userAgent.toLowerCase().indexOf('mobi') > -1 : false;
     invariant(params.challengeId, "challengeId not found");
 
     const challenge = await getChallenge({ id: params.challengeId, userId });
@@ -64,7 +67,7 @@ export const loader: LoaderFunction = async ({ request, params }) => {
         });
 
 
-    return json<LoaderData>({ challenge, entries: entries, totalSteps: aggregation._sum.amount || 0, leaderboard });
+    return json<LoaderData>({ challenge, entries: entries, totalSteps: aggregation._sum.amount || 0, leaderboard, maybeMobile });
 
 }
 
@@ -79,8 +82,9 @@ export default function ChallengeDetailsPage() {
             <div className="mb-2 sm:mb-6">
                 <h3 className="text-3xl font-bold">{data.challenge.title}</h3>
                 <NavBar>
-                    <NavBarLink to={`./`}>Challenge Details</NavBarLink>
-                    <NavBarLink to={`./leaderboard`}>Full Leaderboard</NavBarLink>
+                    <NavBarLink to={`.`} end>Challenge Details</NavBarLink>
+                    <NavBarLink to={`entries`}>Entries</NavBarLink>
+                    <NavBarLink to={`leaderboard`}>Full Leaderboard</NavBarLink>
                 </NavBar>
             </div>
 

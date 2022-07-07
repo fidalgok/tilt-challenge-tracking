@@ -1,6 +1,6 @@
 import type { LoaderFunction, ActionFunction } from "@remix-run/node";
 import { json, redirect } from "@remix-run/node";
-import { Form, useActionData, useParams, useMatches, useCatch, useLoaderData } from "@remix-run/react";
+import { Form, useActionData, useParams, useMatches, useCatch, useLoaderData, Link } from "@remix-run/react";
 import * as React from "react";
 
 import type { Entry } from "~/models/challenge.server"
@@ -157,7 +157,7 @@ export default function EditChallengeEntryPage() {
             notesRef.current?.focus();
         }
     }, [actionData]);
-
+    // shadow-sm focus:ring-blue-500 focus:border-blue-500 px-2 block w-full  border border-gray-300 rounded-md
     return (
         <Form
             method="post"
@@ -179,7 +179,7 @@ export default function EditChallengeEntryPage() {
                         ref={amountRef}
                         name="amount"
                         defaultValue={loaderData?.entry?.amount || 0}
-                        className="flex-1 rounded-md border-2 focus:border-blue-500 px-2 text-lg leading-loose"
+                        className="shadow-sm focus:ring-blue-500 focus:border-blue-500 px-2 block w-full  border border-gray-300 rounded-md"
                         aria-invalid={actionData?.errors?.amount ? true : undefined}
                         aria-errormessage={actionData?.errors?.amount ? "amount-error" : undefined}
                         type="number"
@@ -199,7 +199,7 @@ export default function EditChallengeEntryPage() {
                         ref={notesRef}
                         name="notes"
                         defaultValue={loaderData?.entry?.notes || ""}
-                        className="flex-1 rounded-md border-2 focus:border-blue-500 px-2 text-lg leading-loose"
+                        className="shadow-sm focus:ring-blue-500 focus:border-blue-500 px-2 block w-full  border border-gray-300 rounded-md"
                         aria-invalid={actionData?.errors?.notes ? true : undefined}
                         aria-errormessage={actionData?.errors?.notes ? "notes-error" : undefined}
                         rows={4}
@@ -220,13 +220,14 @@ export default function EditChallengeEntryPage() {
                 <input type="hidden" name="activityDate" value={prepareDateForServer(new Date(activityDate))} />
                 <input type="hidden" name="activityId" value={matchesData.challenge?.activity[0].activityId || ""} />
             </div>
-            <div className="text-right">
+            <div className="mt-4 gap-4 flex justify-end">
                 <button
                     type="submit"
                     className="rounded bg-blue-500 py-2 px-4 text-white hover:bg-blue-600 focus:bg-blue-400"
                 >
                     Save
                 </button>
+                <Link to={'..'} className="rounded bg-gray-100 py-2 px-4 hover:bg-gray-200 focus:bg-gray-300">Cancel</Link>
             </div>
 
         </Form>

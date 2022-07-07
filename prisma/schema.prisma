@@ -57,6 +57,7 @@ model Challenge {
   description String
   published   Boolean  @default(false)
   public      Boolean  @default(false)
+  joinCode    String?
   startDate   DateTime
   endDate     DateTime
   archive     Boolean  @default(false)
