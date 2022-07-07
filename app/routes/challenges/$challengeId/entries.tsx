@@ -2,7 +2,7 @@ import { PencilIcon, PlusIcon } from "@heroicons/react/outline";
 import { Entry } from "@prisma/client";
 import { Form, Link, useActionData, useTransition } from "@remix-run/react";
 import { ActionFunction, json } from "@remix-run/node";
-import { format, isSameDay, startOfDay, startOfToday } from "date-fns";
+import { format, isSameDay, startOfToday } from "date-fns";
 import { useEffect, useState } from "react";
 import { daysBetween, parseDateStringFromServer, useMatchesData, useTimeZoneOffset, UTCFormattedDate } from "~/utils"
 
@@ -99,7 +99,7 @@ export default function ChallengeEntriesPage() {
                 <h3 className="font-bold text-lg md:text-xl ">Challenge Entries</h3>
                 {(entryForToday) ?
                     (
-                        <Link to={`entries/${entryForToday.id}/edit`}>
+                        <Link to={`${entryForToday.id}/edit`}>
                             <div className="flex items-center">
 
                                 <PencilIcon className="h-5 w-5 text-slate-500 inline" />{" "} <span>Quick Edit For Today</span>
@@ -107,7 +107,7 @@ export default function ChallengeEntriesPage() {
                         </Link>
                     ) :
                     (
-                        <Link to={`entries/new?date=${UTCFormattedDate(today)}`}>
+                        <Link to={`new?date=${UTCFormattedDate(today)}`}>
                             <div className="flex items-center">
 
                                 <PlusIcon className="h-5 w-5 text-slate-500 inline" />{" "} <span>Quick Add For Today</span>
@@ -165,14 +165,14 @@ export default function ChallengeEntriesPage() {
                                     {!hasLoaded && (<td className="p-3"></td>)}
                                     {(hasLoaded && !entry) && (
                                         <td className="p-3">
-                                            <Link className="px-2" to={`entries/new?date=${dateAsUTCString}`}>Add</Link>
+                                            <Link className="px-2" to={`new?date=${dateAsUTCString}`}>Add</Link>
                                         </td>
                                     )}
                                     {(hasLoaded && entry) && (
                                         <td className="p-3 ">
                                             <div className="flex flex-col md:flex-row items-start justify-between">
 
-                                                <Link className="block  md:inline-block px-2 mb-3 md:mr-3 md:mb-0 " to={`entries/${entry.id}/edit`}>Edit</Link>
+                                                <Link className="block  md:inline-block px-2 mb-3 md:mr-3 md:mb-0 " to={`${entry.id}/edit`}>Edit</Link>
                                                 <Form
                                                     method="post"
                                                     className="inline-block  px-2"

@@ -1,6 +1,6 @@
 import { Form, Link, useSearchParams } from "@remix-run/react";
 import { Fragment, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { add, compareAsc, eachDayOfInterval, endOfMonth, endOfWeek, format, getDay, isAfter, isBefore, isEqual, isSameDay, isSameMonth, isToday, parse, parseISO, startOfMonth, startOfToday, startOfWeek } from "date-fns";
+import { add, eachDayOfInterval, endOfMonth, endOfWeek, format, getDay, isAfter, isBefore, isEqual, isSameDay, isSameMonth, isToday, parse, startOfMonth, startOfToday, startOfWeek } from "date-fns";
 import { Dialog, Menu, Transition } from "@headlessui/react";
 import { ChevronLeftIcon, ChevronRightIcon, DotsVerticalIcon, PlusIcon } from "@heroicons/react/outline";
 

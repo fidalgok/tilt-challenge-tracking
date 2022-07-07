@@ -82,8 +82,9 @@ export default function ChallengeDetailsPage() {
             <div className="mb-2 sm:mb-6">
                 <h3 className="text-3xl font-bold">{data.challenge.title}</h3>
                 <NavBar>
-                    <NavBarLink to={`./`}>Challenge Details</NavBarLink>
-                    <NavBarLink to={`./leaderboard`}>Full Leaderboard</NavBarLink>
+                    <NavBarLink to={`.`} end>Challenge Details</NavBarLink>
+                    <NavBarLink to={`entries`}>Entries</NavBarLink>
+                    <NavBarLink to={`leaderboard`}>Full Leaderboard</NavBarLink>
                 </NavBar>
             </div>
 

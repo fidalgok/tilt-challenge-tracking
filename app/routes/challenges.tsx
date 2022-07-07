@@ -47,7 +47,7 @@ export default function ChallengesPage() {
         </Form>
       </header>
 
-      <main className="flex flex-col md:flex-row h-full bg-white">
+      <main className="grow flex flex-col md:flex-row  bg-white">
         <ChallengesMenu data={data} />
 
         <div className="flex-1 p-6">
@@ -96,8 +96,11 @@ function ChallengesMenu({ data }: { data: LoaderData }) {
           )}
           {user?.role === 'ADMIN' && (
             <>
-              <hr />
-              <Link to="/admin" className="block p-4 text-xl" >Admin</Link>
+              <div className="mt-4">
+
+
+                <Link to="/admin" className="block p-4 text-xl" >Admin</Link>
+              </div>
             </>
           )
           }

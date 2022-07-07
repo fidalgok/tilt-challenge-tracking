@@ -56,7 +56,7 @@ export default function AdminPage() {
                 </Form>
             </header>
 
-            <main className="flex flex-col md:flex-row h-full bg-white">
+            <main className="grow flex flex-col md:flex-row  bg-white">
                 <ChallengesMenu data={data} />
 
                 <div className="flex-1 p-6">
@@ -103,18 +103,30 @@ function ChallengesMenu({ data }: { data: LoaderData }) {
                         </ol>
                     )}
                     <hr />
+                    <div className="mt-4">
+
+
+                        <NavLink to="." className={({ isActive }) =>
+                            `block border-b p-4 text-xl ${isActive ? "bg-white" : ""}`} end>Admin</NavLink>
+                    </div>
                     <ol>
                         <li>
 
-                            <NavLink to="./challenges/new">Create a New Challenge</NavLink>
+                            <NavLink className={({ isActive }) =>
+                                `block border-b p-4 text-xl ${isActive ? "bg-white" : ""}`
+                            } to="./challenges/new">Create a New Challenge</NavLink>
                         </li>
                         <li>
 
-                            <NavLink to="./challenges/">Active Challenges</NavLink>
+                            <NavLink className={({ isActive }) =>
+                                `block border-b p-4 text-xl ${isActive ? "bg-white" : ""}`
+                            } to="./challenges/">Active Challenges</NavLink>
                         </li>
                         <li>
 
-                            <NavLink to="./users">Manage Users</NavLink>
+                            <NavLink className={({ isActive }) =>
+                                `block border-b p-4 text-xl ${isActive ? "bg-white" : ""}`
+                            } to="./users">Manage Users</NavLink>
                         </li>
 
                     </ol>
@@ -191,6 +203,6 @@ function ChallengesMenu({ data }: { data: LoaderData }) {
                 </Popover.Panel>
             </Transition>
 
-        </Popover>
+        </Popover >
     );
 }
