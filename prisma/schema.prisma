@@ -33,10 +33,11 @@ model Profile {
 }
 
 model Password {
-  hash String
-
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  userId String @unique
+  hash            String
+  resetToken      String?
+  tokenExpiration String?
+  user            User    @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  userId          String  @unique
 }
 
 model Note {
