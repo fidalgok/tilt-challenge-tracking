@@ -1,7 +1,7 @@
 import { Form, Link, useActionData, useLoaderData, useMatches, useTransition } from "@remix-run/react";
 import type { ActionFunction, LoaderFunction } from "@remix-run/node";
 import { json } from "@remix-run/node";
-import { getUsers, updateUserRole } from "~/models/user.server";
+import { createPasswordResetToken, getUsers, updateUserRole } from "~/models/user.server";
 import React, { useState, Fragment, useEffect } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import { classNames, useMatchesData } from "~/utils";
@@ -12,7 +12,8 @@ type LoaderData = {
 
 }
 type ActionData = {
-    update: Awaited<ReturnType<typeof updateUserRole>>[];
+    update: Awaited<ReturnType<typeof updateUserRole>>[] | null;
+    tokens: Awaited<ReturnType<typeof createPasswordResetToken>>[] | null;
 }
 
 type selectedUsersList = string[] | [];
@@ -21,6 +22,8 @@ type userRole = "ADMIN" | "MEMBER"
 
 export const action: ActionFunction = async ({ request }) => {
     const formData = await request.formData();
+    //console.log(formData.getAll('email'))
+    let emails = formData.getAll('email')
     const { _action, ...values } = Object.fromEntries(formData);
 
     if (_action == "edit") {
@@ -32,7 +35,20 @@ export const action: ActionFunction = async ({ request }) => {
             return updateUserRole(userId, role)
         })
         const updatedUsers = await Promise.all(entryPromises);
-        return json<ActionData>({ update: updatedUsers })
+        return json<ActionData>({ update: updatedUsers, tokens: null })
+    } else if (_action == 'passwordReset') {
+        let entries = Object.entries(values);
+        console.log(entries)
+        let resetTokenPromises = emails.map(email => {
+            if (typeof email == 'string' && email.length) {
+                return createPasswordResetToken(email)
+            } else {
+                return new Promise<null>((resolve) => resolve(null))
+            }
+        })
+
+        let tokens = await Promise.all(resetTokenPromises);
+        return json<ActionData>({ tokens, update: null })
     }
     return null;
 }
@@ -49,6 +65,7 @@ export default function AdminUsersIndexPage() {
     const isBusy = transition.state == 'submitting';
 
     let [isOpen, setIsOpen] = useState(false)
+    let [isResetModalOpen, setIsResetModalOpen] = useState(false);
     let [selectedUsers, setSelectedUsers] = useState<selectedUsersList>([])
     let [updateAttribute, setUpdateAttribute] = useState('')
 
@@ -76,6 +93,9 @@ export default function AdminUsersIndexPage() {
         setUpdateAttribute(attribute);
         openModal()
     }
+    function showPasswordModal() {
+        setIsResetModalOpen(true);
+    }
     function handleSelectAllUsers(e: React.ChangeEvent<HTMLInputElement>) {
         const inputList = document.querySelectorAll('input[name="userSelect"]') as NodeListOf<HTMLInputElement>
         let userIds = [] as selectedUsersList;
@@ -99,12 +119,22 @@ export default function AdminUsersIndexPage() {
 
     useEffect(() => {
         if (transition.type === "actionReload") {
-            closeModal();
+            //closeModal();
+        }
+        if (actionData?.tokens) {
+            setIsResetModalOpen(true)
         }
     }, [transition.state === "loading"])
     return (
         <div>
+            <PasswordResetDialog
+                isOpen={isResetModalOpen}
+                setIsOpen={setIsResetModalOpen}
 
+                isBusy={isBusy}
+                resetTokens={actionData?.tokens || null}
+                selectedUsers={selectedUsers}
+            />
 
             <EditUserDialog
                 isOpen={isOpen}
@@ -123,6 +153,33 @@ export default function AdminUsersIndexPage() {
                 )}
                 disabled={selectedUsers.length === 0}
                 onClick={() => handleEditAttributeClick('Role')}>Update Role</button>
+            <Form method="post" className="inline">
+                {selectedUsers.map(u => {
+                    let foundUser = users.find(user => user.id === u);
+                    return <input
+                        type="hidden"
+                        key={u}
+                        name={'email'}
+                        value={foundUser?.email || u}
+                    />
+                })}
+                <button
+                    type="submit"
+                    name="_action"
+                    value="passwordReset"
+                    className={classNames(
+                        selectedUsers.length === 0 ?
+                            'disabled:cursor-not-allowed text-gray-500' :
+                            '',
+                        'p-3'
+
+                    )}
+                    disabled={selectedUsers.length === 0}
+
+                >
+                    Reset Password
+                </button>
+            </Form>
             <table className="w-full border-separate border-spacing-0">
                 <thead>
                     <tr>
@@ -271,4 +328,95 @@ function EditUserDialog({ isOpen, setIsOpen, updateAttribute, selectedUsers, isB
             </Dialog>
         </Transition>
     )
+}
+
+function PasswordResetDialog({ isOpen, setIsOpen, resetTokens, selectedUsers, isBusy }:
+    {
+        isOpen: boolean,
+        setIsOpen: React.Dispatch<React.SetStateAction<boolean>>,
+        resetTokens: ActionData["tokens"] | undefined | null,
+        selectedUsers: string[],
+        isBusy: boolean;
+    }
+) {
+    const { users } = useMatchesData("routes/admin/users/index") as LoaderData
+    const filteredUsers = users.filter(u => selectedUsers.find(id => id === u.id))
+    function closeModal() {
+        return setIsOpen(false)
+    }
+    console.log(resetTokens)
+    let userResetTokens = filteredUsers.map(user => {
+        let foundToken = resetTokens?.find(token => token?.id === user.id)
+        return {
+            id: user.id,
+            name: `${user.profile?.firstName} ${user.profile?.lastName}`,
+            token: foundToken ? new URLSearchParams({ token: foundToken?.password?.resetToken || '' }) : ''
+        }
+    })
+    return (
+        <Transition appear show={isOpen} as={Fragment}>
+            <Dialog as="div" className="relative z-10" onClose={closeModal}>
+                <Transition.Child
+                    as={Fragment}
+                    enter="ease-out duration-300"
+                    enterFrom="opacity-0"
+                    enterTo="opacity-100"
+                    leave="ease-in duration-200"
+                    leaveFrom="opacity-100"
+                    leaveTo="opacity-0"
+                >
+                    <div className="fixed inset-0 bg-black bg-opacity-25" />
+                </Transition.Child>
+
+                <div className="fixed inset-0 overflow-y-auto">
+                    <div className="flex min-h-full items-center justify-center p-4 text-center">
+                        <Transition.Child
+                            as={Fragment}
+                            enter="ease-out duration-300"
+                            enterFrom="opacity-0 scale-95"
+                            enterTo="opacity-100 scale-100"
+                            leave="ease-in duration-200"
+                            leaveFrom="opacity-100 scale-100"
+                            leaveTo="opacity-0 scale-95"
+                        >
+                            <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
+                                <Dialog.Title
+                                    as="h3"
+                                    className="text-lg font-medium leading-6 text-gray-900"
+                                >
+                                    Password Reset Link
+                                </Dialog.Title>
+                                <div className="mt-2">
+                                    <p className="text-sm text-gray-500">
+                                        Password reset link{filteredUsers.length > 1 ? 's' : null} can be found below.
+                                    </p>
+
+                                    {userResetTokens.map((user, i) => (
+                                        <div className="grid grid-cols-2 w-full gap-4" key={user.id}>
+                                            <div>{user.name}</div>
+                                            <Link to={`/reset-password?${user.token}`}>Reset Link</Link>
+
+                                        </div>
+                                    ))}
+
+                                </div>
+
+                                <div className="mt-4">
+
+                                    <button
+                                        type="button"
+                                        className="inline-flex justify-center rounded-md border border-transparent bg-blue-100 px-4 py-2 text-sm font-medium text-blue-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+                                        onClick={closeModal}
+                                    >
+                                        Close
+                                    </button>
+                                </div>
+                            </Dialog.Panel>
+                        </Transition.Child>
+                    </div>
+                </div>
+            </Dialog>
+        </Transition>
+    )
+
 }

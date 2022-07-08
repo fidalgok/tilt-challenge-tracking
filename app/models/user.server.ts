@@ -1,5 +1,7 @@
 import type { Password, User } from "@prisma/client";
 import bcrypt from "bcryptjs";
+import { isAfter } from "date-fns";
+
 
 import { prisma } from "~/db.server";
 
@@ -98,4 +100,99 @@ export async function verifyLogin(
   const { password: _password, ...userWithoutPassword } = userWithPassword;
 
   return userWithoutPassword;
+}
+
+export async function createPasswordResetToken(email: string) {
+  console.log(email)
+  let user = await prisma.user.findUnique({
+    where: {
+      email
+    }
+  });
+
+  if (!user) return null;
+
+  // TODO: hook this up to an email service at some point.
+  let resetToken = await bcrypt.hash(user.email, 8);
+  let expireDate = new Date();
+  expireDate.setHours(expireDate.getHours() + 12);
+
+  return prisma.user.update({
+    where: { id: user.id }, data: {
+      password: {
+        update: {
+
+          resetToken: resetToken,
+          tokenExpiration: expireDate.toISOString()
+        }
+      }
+    },
+    select: {
+      id: true,
+      password: {
+        select: {
+          resetToken: true
+        }
+      }
+    }
+  });
+
+}
+
+export async function resetPassword({ email, newPassword, token }: { email: string, newPassword: string, token: string }) {
+  // check to see if the token matches the user
+  console.log({ email, token })
+  let verifiedUser = await prisma.user.findFirst({
+    where: {
+      email,
+      AND: {
+
+        password: {
+          resetToken: token
+        }
+      }
+    },
+    include: {
+      password: true
+    }
+  });
+  // if user doesn't exist could have been used or never existed return error message
+  if (!verifiedUser || !verifiedUser.password?.resetToken) {
+    return {
+      user: null,
+      error: 'Something went wrong. User or password reset token is invalid. Please try again'
+    }
+  }
+
+  // if it's expired return error message
+
+  if (verifiedUser.password?.tokenExpiration) {
+    let tokenExpired = isAfter(new Date(), new Date(verifiedUser.password.tokenExpiration));
+    if (tokenExpired) {
+      return {
+        user: null,
+        error: 'Password reset token expired. Please try again.'
+      }
+    }
+  }
+
+  // if it exists hash the password and update the user
+  const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+  let updatedUser = await prisma.user.update({
+    where: {
+      email
+    },
+    data: {
+      password: {
+        update: {
+          hash: hashedPassword,
+          tokenExpiration: null,
+          resetToken: null,
+        }
+
+      },
+    },
+  });
+  return { user: updatedUser, error: null }
 }
