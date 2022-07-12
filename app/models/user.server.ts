@@ -1,6 +1,6 @@
 import type { Password, User } from "@prisma/client";
 import bcrypt from "bcryptjs";
-import { isAfter } from "date-fns";
+import { addDays, isAfter } from "date-fns";
 
 
 import { prisma } from "~/db.server";
@@ -27,6 +27,23 @@ export async function getUsers() {
       role: true,
       profile: true,
     }
+  });
+}
+export async function adminGetUsers() {
+  return prisma.user.findMany({
+    select: {
+      id: true,
+      email: true,
+      role: true,
+      profile: true,
+      password: {
+        select: {
+          resetToken: true,
+          tokenExpiration: true
+        }
+      }
+    },
+
   });
 }
 
@@ -103,7 +120,7 @@ export async function verifyLogin(
 }
 
 export async function createPasswordResetToken(email: string) {
-  console.log(email)
+
   let user = await prisma.user.findUnique({
     where: {
       email
@@ -114,8 +131,9 @@ export async function createPasswordResetToken(email: string) {
 
   // TODO: hook this up to an email service at some point.
   let resetToken = await bcrypt.hash(user.email, 8);
-  let expireDate = new Date();
-  expireDate.setHours(expireDate.getHours() + 12);
+  let expireDate = addDays(new Date(), 1);
+
+
 
   return prisma.user.update({
     where: { id: user.id }, data: {
@@ -141,7 +159,7 @@ export async function createPasswordResetToken(email: string) {
 
 export async function resetPassword({ email, newPassword, token }: { email: string, newPassword: string, token: string }) {
   // check to see if the token matches the user
-  console.log({ email, token })
+
   let verifiedUser = await prisma.user.findFirst({
     where: {
       email,

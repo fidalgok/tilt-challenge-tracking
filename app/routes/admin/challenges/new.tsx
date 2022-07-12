@@ -339,26 +339,7 @@ function ChallengeDetailsSection({ fieldErrors }: { fieldErrors: ActionData["err
                                         <VisibilityRadioGroup />
 
 
-                                        <div className="col-span-6 md:col-span-4">
-                                            <label className="flex w-full flex-col gap-1">
-                                                <span className="block font-medium text-lg text-gray-700">Challenge Visibility:</span>
-                                                <input
-                                                    ref={isPublicRef}
-                                                    name="isPublic"
-                                                    placeholder="True or False"
-                                                    className="shadow-sm focus:ring-blue-500 focus:border-blue-500 mt-1 block w-full  border border-gray-300 rounded-md leading-loose"
-                                                    aria-invalid={fieldErrors?.isPublic ? true : undefined}
-                                                    aria-errormessage={fieldErrors?.isPublic ? "isPublic-error" : undefined}
-                                                    type="text"
 
-                                                />
-                                            </label>
-                                            {fieldErrors?.isPublic && (
-                                                <div className="text-red-500 text-sm italic" id="isPublic-error">
-                                                    {fieldErrors.isPublic}
-                                                </div>
-                                            )}
-                                        </div>
 
                                         <div className="col-span-6 md:col-span-4">
                                             <label className="flex w-full flex-col gap-1">
