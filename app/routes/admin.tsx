@@ -171,7 +171,7 @@ function ChallengesMenu({ data }: { data: LoaderData }) {
                                                         className={({ isActive }) =>
                                                             `block border-b p-4 text-xl ${isActive ? "bg-white" : ""}`
                                                         }
-                                                        to={challenge.id}
+                                                        to={`/challenges/${challenge.id}`}
                                                     >
                                                         🏆 {challenge.title}
                                                     </NavLink>

@@ -219,10 +219,10 @@ function ResponsiveStats() {
                                             <h4 className=" text-center text-xl lg:text-2xl font-bold mb-3">{capitalize(challenge.activity[0].unit || "")} Completed</h4>
                                             <p className="text-center text-xl lg:text-4xl font-extrabold">{data.totalSteps}</p>
                                         </div>
-                                        <div className="flex flex-col py-3 px-4 mb-4">
+                                        {!isOpenEnded && (<div className="flex flex-col py-3 px-4 mb-4">
                                             <h4 className="grow text-center text-xl lg:text-2xl font-bold mb-3">{capitalize(challenge.activity[0].unit || "")} Left</h4>
                                             <p className="text-center text-xl lg:text-4xl font-extrabold">{(challenge.activity[0]?.amount || 0) - totalSteps}</p>
-                                        </div>
+                                        </div>)}
                                         <div className="flex flex-col  pt-3 pb-7 px-4">
                                             <h4 className="grow text-center text-xl lg:text-2xl font-bold mb-3">Days Left</h4>
                                             <p className="text-center text-xl lg:text-4xl font-extrabold">{daysLeft}</p>
@@ -235,7 +235,7 @@ function ResponsiveStats() {
                 </Disclosure>
             </div>
 
-            <div className="col-span-3 md:hidden">
+            {!isOpenEnded && (<div className="col-span-3 md:hidden">
 
                 <Disclosure>
                     {({ open }) => (
@@ -265,7 +265,7 @@ function ResponsiveStats() {
                         </>
                     )}
                 </Disclosure>
-            </div>
+            </div>)}
             <div className="col-span-3 md:hidden">
 
 
