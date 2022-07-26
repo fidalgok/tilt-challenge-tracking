@@ -144,7 +144,7 @@ export const loader: LoaderFunction = async ({ request }) => {
     return null;
 }
 
-export default function adminEditChallengePage() {
+export default function AdminEditChallengePage() {
     const actionData = useActionData();
     //console.log(challengeData)
     // TODO: lock down fields depending on whether challenge has started
