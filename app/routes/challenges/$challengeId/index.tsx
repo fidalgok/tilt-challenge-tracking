@@ -14,7 +14,7 @@ import { EntriesCalendar } from "~/components/EntriesCalendar";
 
 import { requireUserId } from "~/session.server";
 import { deleteEntry } from "~/models/challenge.server";
-import { format, isBefore, parse, parseISO } from "date-fns";
+import { format, isBefore } from "date-fns";
 
 
 type ActionData = {
@@ -64,7 +64,7 @@ export default function ChallengeEntries() {
 
     return (
         <>
-            <p className="py-6">{challenge.description}</p>
+            <p className="py-6 whitespace-pre-line" dangerouslySetInnerHTML={{ __html: challenge.description }}></p>
             {isBefore(new Date(), new Date(parseDateStringFromServer(challenge.startDate.toString()))) ? (
                 <div className="flex justify-center items-center flex-col">
                     <div className="max-w-md mt-12 mb-8">

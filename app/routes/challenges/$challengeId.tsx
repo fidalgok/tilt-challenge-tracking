@@ -9,6 +9,9 @@ import { getChallengeEntries, getChallenge, getTotalSteps } from "~/models/chall
 import { requireUserId } from "~/session.server";
 import NavBar from "~/components/NavBar";
 import NavBarLink from "~/components/NavBarLink";
+import { isAfter } from "date-fns";
+import { parseDateStringFromServer } from "~/utils";
+
 
 
 export type LoaderData = {
@@ -83,8 +86,12 @@ export default function ChallengeDetailsPage() {
                 <h3 className="text-3xl font-bold">{data.challenge.title}</h3>
                 <NavBar>
                     <NavBarLink to={`.`} end>Challenge Details</NavBarLink>
-                    <NavBarLink to={`entries`}>Entries</NavBarLink>
-                    <NavBarLink to={`leaderboard`}>Full Leaderboard</NavBarLink>
+                    {isAfter(new Date(), new Date(parseDateStringFromServer(data.challenge.startDate.toString()))) && (
+                        <>
+                            <NavBarLink to={`entries`}>Entries</NavBarLink>
+                            <NavBarLink to={`leaderboard`}>Full Leaderboard</NavBarLink>
+                        </>
+                    )}
                 </NavBar>
             </div>
 
