@@ -120,7 +120,7 @@ export async function verifyLogin(
 }
 
 export async function createPasswordResetToken(email: string) {
-
+  // This is for administrative purposes only.
   let user = await prisma.user.findUnique({
     where: {
       email
@@ -131,7 +131,7 @@ export async function createPasswordResetToken(email: string) {
 
   // TODO: hook this up to an email service at some point.
   let resetToken = await bcrypt.hash(user.email, 8);
-  let expireDate = addDays(new Date(), 1);
+  let expireDate = addDays(new Date(), 2);
 
 
 
@@ -213,4 +213,46 @@ export async function resetPassword({ email, newPassword, token }: { email: stri
     },
   });
   return { user: updatedUser, error: null }
+}
+
+export async function requestPasswordReset(email: string) {
+  let user = await prisma.user.findUnique({
+    where: {
+      email
+    }
+  });
+
+  if (!user) return null;
+
+  // TODO: hook this up to an email service at some point.
+  let resetToken = await bcrypt.hash(user.email, 8);
+  let expireDate = addDays(new Date(), 2);
+
+
+
+  const update = await prisma.user.update({
+    where: { id: user.id }, data: {
+      password: {
+        update: {
+
+          resetToken: resetToken,
+          tokenExpiration: expireDate.toISOString()
+        }
+      }
+    },
+    select: {
+      id: true,
+      password: {
+        select: {
+          resetToken: true
+        }
+      }
+    }
+  });
+  if (update) {
+
+    return { message: 'done' }
+  } else return {
+    message: ''
+  }
 }

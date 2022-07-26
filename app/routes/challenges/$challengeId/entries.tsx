@@ -4,7 +4,7 @@ import { Form, Link, useActionData, useTransition } from "@remix-run/react";
 import { ActionFunction, json } from "@remix-run/node";
 import { format, isSameDay, startOfToday } from "date-fns";
 import { useEffect, useState } from "react";
-import { daysBetween, parseDateStringFromServer, useMatchesData, useTimeZoneOffset, UTCFormattedDate } from "~/utils"
+import { capitalize, daysBetween, parseDateStringFromServer, useMatchesData, useTimeZoneOffset, UTCFormattedDate } from "~/utils"
 
 import { LoaderData } from "../$challengeId"
 import { requireUser } from "~/session.server";
@@ -123,7 +123,7 @@ export default function ChallengeEntriesPage() {
 
                         <th className="sticky top-0 bg-slate-100 border-b border-slate-300 text-left p-3">Day</th>
                         <th className="sticky top-0 bg-slate-100 border-b border-slate-300 text-left p-3">Date</th>
-                        <th className="sticky top-0 bg-slate-100 border-b border-slate-300 text-left p-3 w-full">Steps</th>
+                        <th className="sticky top-0 bg-slate-100 border-b border-slate-300 text-left p-3 w-full">{capitalize(challenge.activity[0].unit || "")}</th>
                         <th className="sticky top-0 bg-slate-100 border-b border-slate-300 text-left p-3">Actions</th>
                     </tr>
                 </thead>

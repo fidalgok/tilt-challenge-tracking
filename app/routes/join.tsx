@@ -112,6 +112,10 @@ export default function Join() {
 
   return (
     <div className="flex min-h-full flex-col justify-center">
+      <div className="mx-auto w-full max-w-2xl px-8">
+
+        <h1 className="text-5xl text-center mb-8">Tilt Challenge Tracking</h1>
+      </div>
       <div className="mx-auto w-full max-w-md px-8">
         <Form method="post" className="space-y-6">
           <div>

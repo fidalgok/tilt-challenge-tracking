@@ -1,6 +1,6 @@
 import { Form, Link, useSearchParams } from "@remix-run/react";
 import { Fragment, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { add, eachDayOfInterval, endOfMonth, endOfWeek, format, getDay, isAfter, isBefore, isEqual, isSameDay, isSameMonth, isToday, parse, startOfMonth, startOfToday, startOfWeek } from "date-fns";
+import { add, eachDayOfInterval, endOfMonth, endOfWeek, format, getDay, isAfter, isBefore, isEqual, isSameDay, isSameMonth, isToday, parse, startOfDay, startOfMonth, startOfToday, startOfWeek } from "date-fns";
 import { Dialog, Menu, Transition } from "@headlessui/react";
 import { ChevronLeftIcon, ChevronRightIcon, DotsVerticalIcon, PlusIcon } from "@heroicons/react/outline";
 
@@ -69,7 +69,7 @@ export function EntriesCalendar({ entries, maybeMobile }: { entries: Entry[], ma
         start: startOfWeek(view === "month" ? firstDayCurrentMonth : firstDayCurrentWeek),
         end: view === "month" ? endOfWeek(endOfMonth(firstDayCurrentMonth)) : endOfWeek(firstDayCurrentWeek),
     });
-
+    console.log(challengeStart)
     function goToToday() {
 
         setSelectedDay(today)
@@ -150,14 +150,12 @@ export function EntriesCalendar({ entries, maybeMobile }: { entries: Entry[], ma
             setHasLoaded(true)
         }
 
-
-
     }, [timezoneOffsets.localTimezoneOffset])
 
 
     return (
         <div className="pt-4 pb-16">
-            <div className="max-w-md px-4 mx-auto sm:px-7 md:max-w-4xl md:px-6">
+            <div className="max-w-md px-4 mx-auto md:mx-0 sm:px-7 md:max-w-4xl md:px-6">
                 <div className="md:grid md:grid-cols-2 md:divide-x md:divide-gray-200">
                     <div className="md:pr-14">
                         <div className="flex items-center">
@@ -210,7 +208,7 @@ export function EntriesCalendar({ entries, maybeMobile }: { entries: Entry[], ma
                                     <button
                                         type="button"
                                         onClick={() => setSelectedDay(day)}
-                                        disabled={isBefore(day, challengeStart) || isAfter(day, challengeEnd)}
+                                        disabled={isBefore(day, startOfDay(challengeStart)) || isAfter(day, challengeEnd)}
                                         className={classNames(
                                             hasLoaded && isEqual(day, selectedDay) && 'text-white',
                                             !isEqual(day, selectedDay) &&
@@ -261,7 +259,7 @@ export function EntriesCalendar({ entries, maybeMobile }: { entries: Entry[], ma
                                 selectedDayEntries.map((entry) => (
                                     <EntryItem entry={entry} key={entry.id} />
                                 ))
-                            ) : (
+                            ) : isBefore(selectedDay, startOfDay(challengeStart)) ? null : (
                                 <Link to={`entries/new?date=${UTCFormattedDate(selectedDay)}`}>
                                     <div className="flex items-center">
 

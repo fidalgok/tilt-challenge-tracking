@@ -1,6 +1,4 @@
 import type { Challenge, Prisma, User, ChallengeActivity, Entry, Activity } from "@prisma/client";
-import { profile } from "console";
-
 
 import { prisma } from "~/db.server";
 
@@ -29,15 +27,15 @@ export function getChallenge({ id, userId }: Pick<Challenge, "id"> & { userId: U
 
 export function adminGetChallenge({ id }: Pick<Challenge, "id">) {
   return prisma.challenge.findFirst({
-    where: { id, published: true },
-    include: { activity: true, users: true },
+    where: { id },
+    include: { activity: { include: { activity: { select: { name: true } } } }, users: true },
   });
 }
 
 export async function getChallengesByAdminId() {
 
   return prisma.challenge.findMany({
-    where: { published: true },
+
     include: { activity: true },
   })
 }
@@ -55,6 +53,23 @@ export function createChallenge({ title, description, startDate, endDate, isPubl
   });
 
 
+}
+
+export function updateChallenge(
+  id: Challenge["id"],
+  challengeUpdate: Partial<Challenge> & { isPublic: Challenge["public"] }) {
+  return prisma.challenge.update({
+    where: { id },
+    data: {
+      title: challengeUpdate.title,
+      description: challengeUpdate.description,
+      startDate: challengeUpdate.startDate,
+      endDate: challengeUpdate.endDate,
+      published: challengeUpdate.published,
+      joinCode: challengeUpdate?.joinCode || null,
+      public: challengeUpdate.isPublic
+    }
+  })
 }
 
 export function createChallengeActivity({ challengeId, amount, trackType, unit, activityName }: {

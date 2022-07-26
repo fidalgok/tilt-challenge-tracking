@@ -32,8 +32,10 @@ export default function AdminChallengesViewChallengePage() {
         <div>
             <h3 className="text-3xl font-bold">{data.challenge.title}</h3>
             <NavBar>
-                <NavBarLink to={`./`}>Challenge Details</NavBarLink>
-                <NavBarLink to={`./entries`}>Challenge Entries</NavBarLink>
+                <NavBarLink to={`.`} end>Details</NavBarLink>
+                <NavBarLink to={'./edit'}>Edit</NavBarLink>
+                <NavBarLink to="./activities">Activities</NavBarLink>
+                <NavBarLink to={`./entries`}>Entries</NavBarLink>
                 <NavBarLink to={`./users`}>Challenge Members</NavBarLink>
             </NavBar>
 

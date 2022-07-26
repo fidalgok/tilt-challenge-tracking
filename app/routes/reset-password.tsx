@@ -86,7 +86,7 @@ export const meta: MetaFunction = () => {
     };
 };
 
-export default function LoginPage() {
+export default function ResetPassword() {
     const [searchParams] = useSearchParams();
     const redirectTo = searchParams.get("redirectTo") || "/challenges";
     const resetToken = searchParams.get('token') || '';
