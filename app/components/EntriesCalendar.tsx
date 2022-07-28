@@ -69,7 +69,7 @@ export function EntriesCalendar({ entries, maybeMobile }: { entries: Entry[], ma
         start: startOfWeek(view === "month" ? firstDayCurrentMonth : firstDayCurrentWeek),
         end: view === "month" ? endOfWeek(endOfMonth(firstDayCurrentMonth)) : endOfWeek(firstDayCurrentWeek),
     });
-    console.log(challengeStart)
+    //console.log(challengeStart)
     function goToToday() {
 
         setSelectedDay(today)

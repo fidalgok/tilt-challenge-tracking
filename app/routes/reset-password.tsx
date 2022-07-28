@@ -37,7 +37,7 @@ export const action: ActionFunction = async ({ request }) => {
     const redirectTo = safeRedirect(formData.get("redirectTo"), "/challenges");
     const token = formData.get('resetToken') as string;
     const remember = formData.get("remember");
-    console.log({ token })
+    //console.log({ token })
     if (!validateEmail(email)) {
         return json<ActionData>(
             { errors: { email: "Email is invalid" }, token: token },
