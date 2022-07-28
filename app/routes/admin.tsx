@@ -120,7 +120,7 @@ function ChallengesMenu({ data }: { data: LoaderData }) {
 
                             <NavLink className={({ isActive }) =>
                                 `block border-b p-4 text-xl ${isActive ? "bg-white" : ""}`
-                            } to="./challenges/">Active Challenges</NavLink>
+                            } to="./challenges/">Manage Challenges</NavLink>
                         </li>
                         <li>
 
@@ -171,7 +171,7 @@ function ChallengesMenu({ data }: { data: LoaderData }) {
                                                         className={({ isActive }) =>
                                                             `block border-b p-4 text-xl ${isActive ? "bg-white" : ""}`
                                                         }
-                                                        to={challenge.id}
+                                                        to={`/challenges/${challenge.id}`}
                                                     >
                                                         🏆 {challenge.title}
                                                     </NavLink>
@@ -187,7 +187,7 @@ function ChallengesMenu({ data }: { data: LoaderData }) {
                                         </li>
                                         <li>
 
-                                            <NavLink to="./challenges/">Active Challenges</NavLink>
+                                            <NavLink to="./challenges/">Manage Challenges</NavLink>
                                         </li>
                                         <li>
 

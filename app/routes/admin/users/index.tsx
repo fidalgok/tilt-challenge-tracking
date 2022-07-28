@@ -1,14 +1,14 @@
-import { Form, Link, useActionData, useLoaderData, useMatches, useTransition } from "@remix-run/react";
+import { Form, Link, useActionData, useLoaderData, useLocation, useMatches, useResolvedPath, useTransition } from "@remix-run/react";
 import type { ActionFunction, LoaderFunction } from "@remix-run/node";
 import { json } from "@remix-run/node";
-import { createPasswordResetToken, getUsers, updateUserRole } from "~/models/user.server";
+import { adminGetUsers, createPasswordResetToken, updateUserRole } from "~/models/user.server";
 import React, { useState, Fragment, useEffect } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import { classNames, useMatchesData } from "~/utils";
 import invariant from "tiny-invariant";
 
 type LoaderData = {
-    users: Awaited<ReturnType<typeof getUsers>>;
+    users: Awaited<ReturnType<typeof adminGetUsers>>;
 
 }
 type ActionData = {
@@ -37,8 +37,7 @@ export const action: ActionFunction = async ({ request }) => {
         const updatedUsers = await Promise.all(entryPromises);
         return json<ActionData>({ update: updatedUsers, tokens: null })
     } else if (_action == 'passwordReset') {
-        let entries = Object.entries(values);
-        console.log(entries)
+
         let resetTokenPromises = emails.map(email => {
             if (typeof email == 'string' && email.length) {
                 return createPasswordResetToken(email)
@@ -54,13 +53,14 @@ export const action: ActionFunction = async ({ request }) => {
 }
 
 export const loader: LoaderFunction = async ({ request }) => {
-    const users = await getUsers();
+    const users = await adminGetUsers();
     return json<LoaderData>({ users })
 }
 
 export default function AdminUsersIndexPage() {
     const { users } = useLoaderData() as LoaderData;
     const actionData = useActionData() as ActionData;
+
     const transition = useTransition();
     const isBusy = transition.state == 'submitting';
 
@@ -191,9 +191,9 @@ export default function AdminUsersIndexPage() {
                                 onChange={(e) => handleSelectAllUsers(e)}
                             />
                         </th>
-                        <th className="sticky top-0 bg-slate-100 border-b border-slate-300 text-left p-3">First Name</th>
-                        <th className="sticky top-0 bg-slate-100 border-b border-slate-300 text-left p-3">Last Name</th>
+                        <th className="sticky top-0 bg-slate-100 border-b border-slate-300 text-left p-3">Name</th>
                         <th className="sticky top-0 bg-slate-100 border-b border-slate-300 text-left p-3">Email</th>
+                        <th className="sticky top-0 bg-slate-100 border-b border-slate-300 text-left p-3">Password Reset</th>
                         <th className="sticky top-0 bg-slate-100 border-b border-slate-300 text-left p-3">Gym</th>
                         <th className="sticky top-0 bg-slate-100 border-b border-slate-300 text-left p-3">Role</th>
                     </tr>
@@ -210,9 +210,15 @@ export default function AdminUsersIndexPage() {
                                     onChange={(e) => handleUserCheckboxCheck(e)}
                                 />
                             </td>
-                            <td className="p-3">{user.profile?.firstName}</td>
-                            <td className="p-3">{user.profile?.lastName}</td>
+                            <td className="p-3">{`${user.profile?.firstName} ${user.profile?.lastName}`}</td>
                             <td className="p-3">{user.email}</td>
+                            <td className="p-3">
+                                {user.password?.resetToken ? `reset expires on ${user.password.tokenExpiration}` : ''}
+                                <br />
+                                {user.password?.resetToken ?
+                                    `/reset-password?${new URLSearchParams({ token: user.password?.resetToken }).toString()}` :
+                                    ""}
+                            </td>
                             <td className="p-3">{user.profile?.gym}</td>
                             <td className="p-3">{user.role}</td>
 
@@ -344,7 +350,7 @@ function PasswordResetDialog({ isOpen, setIsOpen, resetTokens, selectedUsers, is
     function closeModal() {
         return setIsOpen(false)
     }
-    console.log(resetTokens)
+
     let userResetTokens = filteredUsers.map(user => {
         let foundToken = resetTokens?.find(token => token?.id === user.id)
         return {

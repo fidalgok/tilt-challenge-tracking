@@ -1,17 +1,18 @@
 import type { LoaderFunction, ActionFunction } from "@remix-run/node";
 import { json, redirect } from "@remix-run/node";
-import { Form, Link, useLoaderData, useActionData } from "@remix-run/react";
+import { Form, Link, useActionData, } from "@remix-run/react";
 import * as React from "react";
 import { requireUserId } from "~/session.server";
 
-import { createChallenge, createChallengeActivity, getActiveChallengesListItems } from "~/models/challenge.server";
+import { ChallengeWithActivitiesUsers, updateChallenge } from "~/models/challenge.server";
 import { getUserById } from "~/models/user.server";
 import { RadioGroup } from "@headlessui/react";
-import { prepareDateForServer } from "~/utils";
+import { parseDateStringFromServer, prepareDateForServer, stripTimeZone, useMatchesData } from "~/utils";
 import { isBefore } from "date-fns";
 
 type ActionData = {
     errors?: {
+        challengeId?: string;
         challengeTitle?: string;
         challengeDescription?: string;
         startDate?: string;
@@ -27,27 +28,17 @@ type ActionData = {
     success?: string
 }
 
-type LoaderData = {
-    challengeListItems: Awaited<ReturnType<typeof getActiveChallengesListItems>>;
-};
+type MatchesData = {
+    challenge: ChallengeWithActivitiesUsers
+}
 
 
-export const action: ActionFunction = async ({ request }) => {
+
+export const action: ActionFunction = async ({ request, params }) => {
     const userId = await requireUserId(request);
     const user = await getUserById(userId);
-    let reqHeaders = request.headers.entries();
-    // Display the key/value pairs
-    for (var pair of reqHeaders) {
-        console.log(pair[0] + ': ' + pair[1]);
-    }
 
-
-    if (!user) {
-        return json({ message: 'unauthorized' }, { status: 401 });
-    }
-    if (user.email.toLowerCase() == 'kyle.fidalgo@gmail.com') {
-        // good to go
-    } else if (user.role !== "ADMIN") {
+    if (!user || user.role !== "ADMIN") {
         return json({ message: 'unauthorized' }, { status: 401 });
     }
 
@@ -59,14 +50,20 @@ export const action: ActionFunction = async ({ request }) => {
     const endDate = formData.get("endDate");
     const isPublic = formData.get("isPublic");
     const published = formData.get("published");
-    const activityName = formData.get("activityName");
-    const activityAmount = formData.get("activityAmount");
-    const activityUnit = formData.get("activityUnit");
-    const activityTrackType = formData.get("activityTrackType");
+
     // all the things I need
     // challenge: title, description, startDate, endDate, isPublic, published
-    // challenge activity: challengeId, amount, trackType, unit, activityName
-    console.log({ challengeTitle, description, startDate, endDate, isPublic, published, activityName, activityAmount, activityUnit, activityTrackType });
+
+    console.log({ challengeTitle, description, startDate, endDate, isPublic, published });
+    if (!params.challengeId) {
+        return json<ActionData>(
+            {
+                errors: { challengeId: "Challenge ID not found" },
+
+            },
+            { status: 400 }
+        )
+    }
     if (typeof challengeTitle !== "string" || challengeTitle.length === 0) {
         return json<ActionData>(
             { errors: { challengeTitle: "Challenge title is required." } },
@@ -109,31 +106,6 @@ export const action: ActionFunction = async ({ request }) => {
             { status: 400 }
         )
     }
-    if (typeof activityTrackType !== "string" || activityTrackType.length === 0) {
-        return json<ActionData>(
-            { errors: { activityTrackType: "Challenge activityTrackType is required." } },
-            { status: 400 }
-        )
-    }
-    if (activityTrackType == 'targetVolume' && (!activityAmount || Number.isNaN(parseFloat(activityAmount.toString())) || Number(activityAmount) <= 0)) {
-        return json<ActionData>(
-            { errors: { activityAmount: "Challenge activityAmount is required." } },
-            { status: 400 }
-        )
-    }
-    if (typeof activityName !== "string" || activityName.length === 0) {
-        return json<ActionData>(
-            { errors: { activityName: "Challenge activityName is required." } },
-            { status: 400 }
-        )
-    }
-
-    if (typeof activityUnit !== "string" || activityUnit.length === 0) {
-        return json<ActionData>(
-            { errors: { activityUnit: "Challenge activityUnit is required." } },
-            { status: 400 }
-        )
-    }
 
 
     const convertedStartDate = new Date(prepareDateForServer(startDate));
@@ -141,7 +113,7 @@ export const action: ActionFunction = async ({ request }) => {
     const convertedEndDate = new Date(prepareDateForServer(endDate));
     console.log(convertedEndDate)
 
-    const challenge = await createChallenge({
+    const challenge = await updateChallenge(params.challengeId, {
         title: challengeTitle,
         description: description,
         startDate: convertedStartDate,
@@ -150,14 +122,7 @@ export const action: ActionFunction = async ({ request }) => {
         published: published.toLowerCase() === "true",
     });
 
-    // we have the challenge now create the challenge activity
-    const activity = await createChallengeActivity({
-        challengeId: challenge.id,
-        amount: Number(activityAmount),
-        trackType: activityTrackType,
-        unit: activityUnit,
-        activityName: activityName,
-    })
+
 
     return json<ActionData>({ success: "Challenge created successfully." });
 }
@@ -174,18 +139,21 @@ export const loader: LoaderFunction = async ({ request }) => {
         throw redirect("/challenges");
     }
 
+
+
     return null;
 }
 
-export default function CreateNewChallengePage() {
-    const data = useLoaderData() as LoaderData;
+export default function AdminEditChallengePage() {
     const actionData = useActionData();
-
+    //console.log(challengeData)
+    // TODO: lock down fields depending on whether challenge has started
+    // or users have started adding entries.
     // challenge: title, description, startDate, endDate, isPublic, published
-    // challenge activity:  amount, trackType, unit, activityName
+
     return (
         <div className="p-3">
-            <h1 className="text-4xl mb-8">Create a Challenge</h1>
+            <h1 className="text-4xl mb-8">Edit Challenge Details</h1>
             {actionData?.success && <p>Success!</p>}
 
             <Form method="post" style={{
@@ -196,32 +164,15 @@ export default function CreateNewChallengePage() {
             }}>
                 <ChallengeDetailsSection fieldErrors={actionData?.errors} />
 
-                <div className="hidden sm:block" aria-hidden="true">
-                    <div className="py-5">
-                        <div className="border-t border-gray-200" />
-                    </div>
-                </div>
-
-                <ActivityDetails fieldErrors={actionData?.errors} />
-
-
                 <div className="mt-8 gap-4 flex justify-end">
                     <button
                         type="submit"
-                        name="published"
-                        value="true"
+
                         className="rounded bg-blue-500 py-2 px-4 text-white hover:bg-blue-600 focus:bg-blue-400"
                     >
-                        Save & Publish
+                        Save
                     </button>
-                    <button
-                        type="submit"
-                        name="published"
-                        value="false"
-                        className="rounded bg-gray-100 py-2 px-4 hover:bg-gray-200 focus:bg-gray-300"
-                    >
-                        Save Draft
-                    </button>
+
                     <Link to={'..'} className="rounded bg-gray-100 py-2 px-4 hover:bg-gray-200 focus:bg-gray-300">Cancel</Link>
                 </div>
             </Form>
@@ -230,6 +181,12 @@ export default function CreateNewChallengePage() {
 }
 
 interface VisibilityOption {
+    name: string;
+    value: string;
+    description: string,
+}
+
+interface RadioOption {
     name: string;
     value: string;
     description: string,
@@ -249,6 +206,8 @@ const visibilityOptions: VisibilityOption[] = [
 ]
 
 function ChallengeDetailsSection({ fieldErrors }: { fieldErrors: ActionData["errors"] }) {
+    const { challenge } = useMatchesData('routes/admin/challenges/$challengeId') as MatchesData;
+    console.log(challenge)
     const challengeTitleRef = React.useRef<HTMLInputElement>(null);
     const descriptionRef = React.useRef<HTMLTextAreaElement>(null);
     const startDateRef = React.useRef<HTMLInputElement>(null);
@@ -279,6 +238,7 @@ function ChallengeDetailsSection({ fieldErrors }: { fieldErrors: ActionData["err
                                             name="challengeTitle"
                                             fieldError={fieldErrors?.challengeTitle}
                                             ref={challengeTitleRef}
+                                            defaultValue={challenge?.title}
                                             required
                                         />
 
@@ -298,7 +258,7 @@ function ChallengeDetailsSection({ fieldErrors }: { fieldErrors: ActionData["err
                                                     className="shadow-sm focus:ring-blue-500 focus:border-blue-500 mt-1 block w-full  border border-gray-300 rounded-md"
                                                     aria-invalid={fieldErrors?.challengeDescription ? true : undefined}
                                                     aria-errormessage={fieldErrors?.challengeDescription ? "description-error" : undefined}
-                                                    defaultValue={''}
+                                                    defaultValue={challenge.description}
                                                     required
                                                 />
                                             </div>
@@ -317,7 +277,8 @@ function ChallengeDetailsSection({ fieldErrors }: { fieldErrors: ActionData["err
                                                 ref={startDateRef}
                                                 name="startDate"
                                                 id="endDate"
-                                                placeholder="EST EX: 2022-05-01T00:00:00-0400"
+                                                defaultValue={parseDateStringFromServer(challenge.startDate?.toString()).split('T')[0]}
+
                                                 className="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm  border-gray-300 rounded-md leading-loose"
                                                 aria-invalid={fieldErrors?.startDate ? true : undefined}
                                                 aria-errormessage={fieldErrors?.startDate ? "startDate-error" : undefined}
@@ -340,7 +301,7 @@ function ChallengeDetailsSection({ fieldErrors }: { fieldErrors: ActionData["err
                                                 ref={endDateRef}
                                                 name="endDate"
                                                 id="endDate"
-
+                                                defaultValue={parseDateStringFromServer(challenge.endDate.toString()).split("T")[0]}
                                                 className="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm  border-gray-300 rounded-md leading-loose"
                                                 aria-invalid={fieldErrors?.endDate ? true : undefined}
                                                 aria-errormessage={fieldErrors?.endDate ? "endDate-error" : undefined}
@@ -355,7 +316,16 @@ function ChallengeDetailsSection({ fieldErrors }: { fieldErrors: ActionData["err
                                             )}
                                         </div>
 
-                                        <VisibilityRadioGroup />
+                                        <VisibilityRadioGroup isPublic={challenge.public.toString()} />
+                                        <HeadlessRadioGroup
+                                            name="published"
+                                            radioLabel="Published Status"
+                                            published={challenge.published}
+                                            radioOptions={
+                                                [{ name: "Published", value: "true", description: "" },
+                                                { name: "Unpublished", value: "false", description: "" }
+                                                ]
+                                            } />
 
                                     </div>
 
@@ -371,132 +341,7 @@ function ChallengeDetailsSection({ fieldErrors }: { fieldErrors: ActionData["err
     )
 }
 
-function ActivityDetails({ fieldErrors }: { fieldErrors: ActionData["errors"] }) {
-    const activityNameRef = React.useRef<HTMLInputElement>(null);
-    const activityAmountRef = React.useRef<HTMLInputElement>(null);
-    const activityTrackTypeRef = React.useRef<HTMLInputElement>(null);
-    const activityUnitRef = React.useRef<HTMLInputElement>(null);
 
-    return (
-        <>
-            <div>
-                <div className="md:grid md:grid-cols-3 md:gap-6">
-                    <div className="md:col-span-1">
-                        <div className="px-4 sm:px-0">
-                            <h3 className="text-xl font-medium leading-6 text-gray-900">Activity Details</h3>
-                            <p className="mt-1 text-sm text-gray-600">
-                                Add activities to track for this challenge.
-                            </p>
-                        </div>
-                    </div>
-                    <div className="mt-5 md:mt-0 md:col-span-2">
-                        {/* start fields */}
-                        <div>
-
-                            <div className="shadow overflow-hidden sm:rounded-md">
-                                <div className="px-4 py-5 bg-white sm:p-6">
-                                    <div className="grid grid-cols-6 gap-6">
-                                        <div className="col-span-6 sm:col-span-4">
-                                            <label htmlFor="activityName" className="block font-medium text-lg text-gray-700">
-                                                Activity Name
-                                            </label>
-                                            <div>What activity will be tracked? ex. miles, rounds of a movement, grams of a macro or fruits and veggies, etc.</div>
-                                            <input
-                                                ref={activityNameRef}
-                                                name="activityName"
-                                                required
-                                                className="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm  border-gray-300 rounded-md leading-loose"
-                                                aria-invalid={fieldErrors?.activityName ? true : undefined}
-                                                aria-errormessage={fieldErrors?.activityName ? "activityName-error" : undefined}
-                                                type="text"
-
-                                            />
-                                            {fieldErrors?.activityName && (
-                                                <div className="text-red-500 text-sm italic" id="activityName-error">
-                                                    {fieldErrors.activityName}
-                                                </div>
-                                            )}
-                                        </div>
-
-                                        <div className="col-span-6 sm:col-span-4">
-                                            <label className="flex w-full flex-col gap-1">
-                                                <span className="block font-medium text-lg text-gray-700">Activity Track Type:</span>
-                                                <div>Acceptable choices: targetVolume, openVolume, completeIncomplete</div>
-                                                <input
-                                                    ref={activityTrackTypeRef}
-                                                    name="activityTrackType"
-
-                                                    className="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm  border-gray-300 rounded-md leading-loose"
-                                                    aria-invalid={fieldErrors?.activityTrackType ? true : undefined}
-                                                    aria-errormessage={fieldErrors?.activityTrackType ? "activityTrackType-error" : undefined}
-                                                    type="text"
-
-                                                />
-                                            </label>
-                                            {fieldErrors?.activityTrackType && (
-                                                <div className="text-red-500 text-sm italic" id="activityTrackType-error">
-                                                    {fieldErrors.activityTrackType}
-                                                </div>
-                                            )}
-                                        </div>
-
-                                        <div className="col-span-6 sm:col-span-4">
-                                            <label className="flex w-full flex-col gap-1">
-                                                <span className="block font-medium text-lg text-gray-700">Activity Unit:</span>
-                                                <div>ex. rounds, reps, grams, etc.</div>
-                                                <input
-                                                    ref={activityUnitRef}
-                                                    name="activityUnit"
-
-                                                    className="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm  border-gray-300 rounded-md leading-loose"
-                                                    aria-invalid={fieldErrors?.activityUnit ? true : undefined}
-                                                    aria-errormessage={fieldErrors?.activityUnit ? "activityUnit-error" : undefined}
-                                                    type="text"
-
-                                                />
-                                            </label>
-                                            {fieldErrors?.activityUnit && (
-                                                <div className="text-red-500 text-sm italic" id="activityUnit-error">
-                                                    {fieldErrors.activityUnit}
-                                                </div>
-                                            )}
-                                        </div>
-
-                                        <div className="col-span-6 sm:col-span-4">
-                                            <label className="flex w-full flex-col gap-1">
-                                                <span className="block font-medium text-lg text-gray-700">Activity Amount to Track:</span>
-                                                <div>Optional: only used for targetVolume activity type.</div>
-                                                <input
-                                                    ref={activityAmountRef}
-                                                    name="activityAmount"
-
-                                                    className="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm  border-gray-300 rounded-md leading-loose"
-                                                    aria-invalid={fieldErrors?.activityAmount ? true : undefined}
-                                                    aria-errormessage={fieldErrors?.activityAmount ? "activityAmount-error" : undefined}
-                                                    type="number"
-
-                                                />
-                                            </label>
-                                            {fieldErrors?.activityAmount && (
-                                                <div className="text-red-500 text-sm italic" id="activityAmount-error">
-                                                    {fieldErrors.activityAmount}
-                                                </div>
-                                            )}
-                                        </div>
-
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-
-                        {/* end fields */}
-                    </div>
-                </div>
-            </div>
-        </>
-    );
-}
 
 // { name, label, ref, fieldError }
 interface TextInputProps extends React.HTMLProps<HTMLDivElement> {
@@ -519,6 +364,7 @@ const FormTextInput = React.forwardRef<HTMLInputElement, TextInputProps>((props,
                     aria-invalid={props.fieldError ? true : undefined}
                     aria-errormessage={props.fieldError ? "activityAmount-error" : undefined}
                     type="text"
+                    defaultValue={props?.defaultValue}
                     required={props?.required ? true : false}
                 />
             </label>
@@ -531,7 +377,7 @@ const FormTextInput = React.forwardRef<HTMLInputElement, TextInputProps>((props,
     )
 })
 
-function VisibilityRadioGroup() {
+function VisibilityRadioGroup({ isPublic }: { isPublic?: string }) {
     const [selected, setSelected] = React.useState(visibilityOptions[0])
 
     return (
@@ -601,7 +447,7 @@ function VisibilityRadioGroup() {
                     </div>
                 </RadioGroup>
             </div>
-            {selected.value == "joinCode" && (
+            {selected.value == "false" && (
 
                 <div className="py-4">
                     {/* TODO */}
@@ -612,6 +458,80 @@ function VisibilityRadioGroup() {
                     />
                 </div>
             )}
+        </div >
+    )
+}
+function HeadlessRadioGroup({ name, radioLabel, radioOptions, published }: { name: string, radioLabel: string, radioOptions: RadioOption[], published: boolean }) {
+    const [selected, setSelected] = React.useState({ description: '', value: published ? 'true' : 'false', name: published ? "Published" : "Unpublished" })
+
+    return (
+        <div className="col-span-6 md:col-span-4">
+            <div className="w-full max-w-md">
+                <RadioGroup
+                    value={selected.value}
+                    name={name}
+                    onChange={(e: string) => {
+                        let foundOption = radioOptions.find(option => option.value === e);
+                        if (foundOption) {
+
+                            setSelected(foundOption)
+                        }
+                    }
+                    }
+                >
+                    <RadioGroup.Label className="block py-4">{radioLabel}</RadioGroup.Label>
+                    <div className="space-y-2">
+                        {radioOptions.map((option) => (
+                            <RadioGroup.Option
+                                key={option.value}
+                                value={option.value}
+
+                                className={({ active, checked }) =>
+                                    `${active
+                                        ? 'ring-2 ring-white ring-opacity-60 ring-offset-2 ring-offset-sky-300'
+                                        : ''
+                                    }
+                    ${checked ? 'bg-sky-900 bg-opacity-75 text-white' : 'bg-white'
+                                    }
+                      relative flex cursor-pointer rounded-lg px-5 py-4 shadow-md focus:outline-none`
+                                }
+                            >
+                                {({ active, checked }) => (
+                                    <>
+                                        <div className="flex w-full items-center justify-between">
+                                            <div className="flex items-center">
+                                                <div className="text-sm">
+                                                    <RadioGroup.Label
+                                                        as="p"
+                                                        className={`font-medium  ${checked ? 'text-white' : 'text-gray-900'
+                                                            }`}
+                                                    >
+                                                        {option.name}
+                                                    </RadioGroup.Label>
+                                                    <RadioGroup.Description
+                                                        as="span"
+                                                        className={`inline ${checked ? 'text-sky-100' : 'text-gray-500'
+                                                            }`}
+                                                    >
+                                                        <span>
+                                                            {option.description}</span>
+                                                    </RadioGroup.Description>
+                                                </div>
+                                            </div>
+                                            {checked && (
+                                                <div className="shrink-0 text-white">
+                                                    <CheckIcon className="h-6 w-6" />
+                                                </div>
+                                            )}
+                                        </div>
+                                    </>
+                                )}
+                            </RadioGroup.Option>
+                        ))}
+                    </div>
+                </RadioGroup>
+            </div>
+
         </div >
     )
 }
@@ -629,4 +549,8 @@ function CheckIcon({ className }: { className: string }) {
             />
         </svg>
     )
+}
+
+export function CatchBoundary() {
+    return <div>Whoops</div>
 }

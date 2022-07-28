@@ -203,7 +203,7 @@ export default function EditChallengeEntryPage() {
                         aria-invalid={actionData?.errors?.notes ? true : undefined}
                         aria-errormessage={actionData?.errors?.notes ? "notes-error" : undefined}
                         rows={4}
-                        placeholder="Ex. 20 inch box, body weight"
+                        placeholder=""
 
                     >
 

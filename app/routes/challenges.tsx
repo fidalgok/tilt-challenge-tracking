@@ -9,7 +9,7 @@ import { getActiveChallengesListItems } from "../models/challenge.server";
 
 import { Popover, Transition } from "@headlessui/react"
 import { MenuIcon, XIcon } from "@heroicons/react/outline"
-import { userInfo } from "os";
+
 
 
 type LoaderData = {
@@ -153,6 +153,16 @@ function ChallengesMenu({ data }: { data: LoaderData }) {
                       ))}
                     </ol>
                   )}
+                  {user?.role === 'ADMIN' && (
+                    <>
+                      <div className="mt-4">
+
+
+                        <Link to="/admin" className="block p-4 text-xl" >Admin</Link>
+                      </div>
+                    </>
+                  )
+                  }
                 </div>
               </nav>
             </div>
