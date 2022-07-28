@@ -38,7 +38,7 @@ export const action: ActionFunction = async ({ request }) => {
     let reqHeaders = request.headers.entries();
     // Display the key/value pairs
     for (var pair of reqHeaders) {
-        console.log(pair[0] + ': ' + pair[1]);
+        //console.log(pair[0] + ': ' + pair[1]);
     }
 
 
@@ -66,7 +66,7 @@ export const action: ActionFunction = async ({ request }) => {
     // all the things I need
     // challenge: title, description, startDate, endDate, isPublic, published
     // challenge activity: challengeId, amount, trackType, unit, activityName
-    console.log({ challengeTitle, description, startDate, endDate, isPublic, published, activityName, activityAmount, activityUnit, activityTrackType });
+    //console.log({ challengeTitle, description, startDate, endDate, isPublic, published, activityName, activityAmount, activityUnit, activityTrackType });
     if (typeof challengeTitle !== "string" || challengeTitle.length === 0) {
         return json<ActionData>(
             { errors: { challengeTitle: "Challenge title is required." } },
@@ -139,7 +139,7 @@ export const action: ActionFunction = async ({ request }) => {
     const convertedStartDate = new Date(prepareDateForServer(startDate));
 
     const convertedEndDate = new Date(prepareDateForServer(endDate));
-    console.log(convertedEndDate)
+    //console.log(convertedEndDate)
 
     const challenge = await createChallenge({
         title: challengeTitle,

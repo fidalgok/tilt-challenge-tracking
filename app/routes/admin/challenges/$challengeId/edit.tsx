@@ -54,7 +54,7 @@ export const action: ActionFunction = async ({ request, params }) => {
     // all the things I need
     // challenge: title, description, startDate, endDate, isPublic, published
 
-    console.log({ challengeTitle, description, startDate, endDate, isPublic, published });
+    //console.log({ challengeTitle, description, startDate, endDate, isPublic, published });
     if (!params.challengeId) {
         return json<ActionData>(
             {
@@ -111,7 +111,7 @@ export const action: ActionFunction = async ({ request, params }) => {
     const convertedStartDate = new Date(prepareDateForServer(startDate));
 
     const convertedEndDate = new Date(prepareDateForServer(endDate));
-    console.log(convertedEndDate)
+    //console.log(convertedEndDate)
 
     const challenge = await updateChallenge(params.challengeId, {
         title: challengeTitle,
@@ -207,7 +207,7 @@ const visibilityOptions: VisibilityOption[] = [
 
 function ChallengeDetailsSection({ fieldErrors }: { fieldErrors: ActionData["errors"] }) {
     const { challenge } = useMatchesData('routes/admin/challenges/$challengeId') as MatchesData;
-    console.log(challenge)
+    //console.log(challenge)
     const challengeTitleRef = React.useRef<HTMLInputElement>(null);
     const descriptionRef = React.useRef<HTMLTextAreaElement>(null);
     const startDateRef = React.useRef<HTMLInputElement>(null);
