@@ -61,7 +61,8 @@ export default function ChallengeEntries() {
 
     const matches = useMatchesData('routes/challenges/$challengeId');
     const { challenge, entries, ...data } = matches as LoaderData;
-
+    const startDate = new Date(parseDateStringFromServer(challenge.startDate.toString()));
+    const endDate = new Date(parseDateStringFromServer(challenge.endDate.toString()));
     return (
         <>
             <div className="col-span-3 md:hidden">
@@ -78,13 +79,19 @@ export default function ChallengeEntries() {
                                 />
                             </Disclosure.Button>
                             <Disclosure.Panel className="px-4 pt-4 pb-2 text-sm">
-                                <p className="py-6 whitespace-pre-line" dangerouslySetInnerHTML={{ __html: challenge.description }}></p>
+                                <p className="pt-6 pb-4">
+                                    Dates tracked: {format(startDate, 'MMM dd, yyy')} - {format(endDate, 'MMM dd, yyy')}
+                                </p>
+                                <p className="whitespace-pre-line" dangerouslySetInnerHTML={{ __html: challenge.description }}></p>
                             </Disclosure.Panel>
                         </>
                     )}
                 </Disclosure>
             </div>
-            <p className="hidden md:block py-6 whitespace-pre-line" dangerouslySetInnerHTML={{ __html: challenge.description }}></p>
+            <p className="hidden md:block pt-6 pb-4">
+                Dates tracked: {format(startDate, 'MMM dd, yyy')} - {format(endDate, 'MMM dd, yyy')}
+            </p>
+            <p className="hidden md:block whitespace-pre-line" dangerouslySetInnerHTML={{ __html: challenge.description }}></p>
             {isBefore(new Date(), new Date(parseDateStringFromServer(challenge.startDate.toString()))) ? (
                 <div className="flex justify-center items-center flex-col">
                     <div className="max-w-md mt-12 mb-8">
