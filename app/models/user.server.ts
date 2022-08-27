@@ -251,8 +251,9 @@ export async function requestPasswordReset(email: string) {
   });
   if (update) {
 
-    return { message: 'done' }
+    return { message: 'done', resetToken }
   } else return {
-    message: ''
+    message: null,
+    resetToken: null
   }
 }

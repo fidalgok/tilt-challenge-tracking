@@ -5,6 +5,7 @@ import type {
 } from "@remix-run/node";
 import { json, redirect } from "@remix-run/node";
 import { Form, Link, useActionData, useSearchParams } from "@remix-run/react";
+import { sendRecoveryEmail, sendTestEmail } from "~/utils";
 import * as React from "react";
 
 
@@ -41,8 +42,10 @@ export const action: ActionFunction = async ({ request }) => {
 
     // let's verify the email and token match with what's in the database
     const result = await requestPasswordReset(email);
+    if (result?.resetToken) {
 
-
+        sendRecoveryEmail(email, result.resetToken)
+    }
 
     return json<ActionData>(
         { message: result?.message || '' },

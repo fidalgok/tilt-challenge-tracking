@@ -38,6 +38,7 @@
     "@remix-run/server-runtime": "^1.6.3",
     "bcryptjs": "^2.4.3",
     "date-fns": "^2.28.0",
+    "node-mailjet": "^5.1.1",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "tiny-invariant": "^1.2.0"
