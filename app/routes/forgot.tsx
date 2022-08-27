@@ -5,7 +5,7 @@ import type {
 } from "@remix-run/node";
 import { json, redirect } from "@remix-run/node";
 import { Form, Link, useActionData, useSearchParams } from "@remix-run/react";
-import { sendRecoveryEmail, sendTestEmail } from "~/utils";
+import { sendRecoveryEmail } from "~/mail.server";
 import * as React from "react";
 
 
@@ -82,9 +82,7 @@ export default function ForgotPassword() {
             <div className="mx-auto w-full max-w-md px-8">
                 {actionData?.message === 'done' ? (
                     <div className="mb-8">
-                        <p className="mb-4">
-                            Hey! Just a heads up. This password request get's sent to an admin first and then we'll send you an email with a reset link. If a user with that email exists you can expect a link from an admin in the next 24 hours or so. Sit tight, keep tracking, everything will be all right!</p>
-                        <p>Don't forget to check your email for a reset link soon.</p>
+                        <p>A password request has been sent. If a user with that email was found you'll receive an email with instructions for resetting your password.</p>
                     </div>
                 ) : actionData?.message == '' ? (
                     <div className="mb-8">
