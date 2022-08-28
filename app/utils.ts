@@ -1,8 +1,6 @@
 import { useMatches } from "@remix-run/react";
 import { useMemo, useState, useEffect } from "react";
-
 import type { User } from "~/models/user.server";
-
 const DEFAULT_REDIRECT = "/";
 
 /**
@@ -229,3 +227,4 @@ export function useWindowSize() {
 
   return windowDimensions;
 }
+
