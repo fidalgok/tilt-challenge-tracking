@@ -116,58 +116,64 @@ function ChallengesMenu({ data }: { data: LoaderData }) {
         leaveTo="opacity-0 scale-95"
       >
         <Popover.Panel focus className="absolute top-0 inset-x-0 p-2 transition transform origin-top-right md:hidden">
-          <div className="rounded-lg shadow-lg ring-1 ring-black ring-opacity-5 bg-white divide-y-2 divide-gray-50">
-            <div className="pt-5 pb-6 px-2">
-              <div className="flex items-center justify-between">
+          {({ close }) => (
 
-                <Popover.Button className="bg-white rounded-md p-2 inline-flex items-center justify-center text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500">
-                  <span className="sr-only">Close menu</span>
-                  <XIcon className="h-6 w-6" aria-hidden="true" />
-                </Popover.Button>
+
+            <div className="rounded-lg shadow-lg ring-1 ring-black ring-opacity-5 bg-white divide-y-2 divide-gray-50">
+              <div className="pt-5 pb-6 px-2">
+                <div className="flex items-center justify-between">
+
+                  <Popover.Button className="bg-white rounded-md p-2 inline-flex items-center justify-center text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500">
+                    <span className="sr-only">Close menu</span>
+                    <XIcon className="h-6 w-6" aria-hidden="true" />
+                  </Popover.Button>
+                </div>
+              </div>
+              <div className="mt-2">
+                <nav className="grid gap-y-8">
+                  <div className="sm:h-full  sm:max-w-sm border-r bg-gray-50">
+                    <Link
+                      onClick={() => close()}
+                      to="join" className="block p-4 text-xl text-blue-500">
+                      + Join Other Active Challenges
+                    </Link>
+
+                    <hr />
+
+                    {data.challengeListItems.length === 0 ? (
+                      <p className="p-4">No challenges yet</p>
+                    ) : (
+                      <ol>
+                        {data.challengeListItems.map((challenge) => (
+                          <li key={challenge.id}>
+                            <NavLink
+                              onClick={() => close()}
+                              className={({ isActive }) =>
+                                `block border-b p-4 text-xl ${isActive ? "bg-white" : ""}`
+                              }
+                              to={challenge.id}
+                            >
+                              🏆 {challenge.title}
+                            </NavLink>
+                          </li>
+                        ))}
+                      </ol>
+                    )}
+                    {user?.role === 'ADMIN' && (
+                      <>
+                        <div className="mt-4">
+
+
+                          <Link onClick={() => close()} to="/admin" className="block p-4 text-xl" >Admin</Link>
+                        </div>
+                      </>
+                    )
+                    }
+                  </div>
+                </nav>
               </div>
             </div>
-            <div className="mt-2">
-              <nav className="grid gap-y-8">
-                <div className="sm:h-full  sm:max-w-sm border-r bg-gray-50">
-                  <Link to="join" className="block p-4 text-xl text-blue-500">
-                    + Join Other Active Challenges
-                  </Link>
-
-                  <hr />
-
-                  {data.challengeListItems.length === 0 ? (
-                    <p className="p-4">No challenges yet</p>
-                  ) : (
-                    <ol>
-                      {data.challengeListItems.map((challenge) => (
-                        <li key={challenge.id}>
-                          <NavLink
-                            className={({ isActive }) =>
-                              `block border-b p-4 text-xl ${isActive ? "bg-white" : ""}`
-                            }
-                            to={challenge.id}
-                          >
-                            🏆 {challenge.title}
-                          </NavLink>
-                        </li>
-                      ))}
-                    </ol>
-                  )}
-                  {user?.role === 'ADMIN' && (
-                    <>
-                      <div className="mt-4">
-
-
-                        <Link to="/admin" className="block p-4 text-xl" >Admin</Link>
-                      </div>
-                    </>
-                  )
-                  }
-                </div>
-              </nav>
-            </div>
-          </div>
-
+          )}
         </Popover.Panel>
       </Transition>
 
