@@ -500,3 +500,9 @@ function BeforeStartDate() {
         </>
     )
 }
+// this component displays after the challenge end date
+function ChallengeSummary() {
+    return (
+        <div>This challenge is complete</div>
+    )
+}
