@@ -1,5 +1,6 @@
 import { Link, useFetcher, useLoaderData } from "@remix-run/react";
-import { ActionFunction, LoaderFunction, json } from "@remix-run/node";
+import type { LoaderArgs } from "@remix-run/node";
+import { ActionFunction, json, redirect } from "@remix-run/node";
 
 import { ChallengeWithActivities, getOpenChallenges, joinChallengeById } from "~/models/challenge.server";
 import { requireUserId } from "~/session.server";
@@ -28,12 +29,12 @@ export const action: ActionFunction = async ({ request }) => {
 
 
     const joinedChallenge = await joinChallengeById({ id: challengeId, userId });
-    return null;
+    return redirect(`~/challenges/${joinedChallenge.id}`);
 }
 
 
 
-export const loader: LoaderFunction = async ({ request, params }) => {
+export const loader = async ({ request, params }: LoaderArgs) => {
     const userId = await requireUserId(request);
 
     const challenges = await getOpenChallenges({ userId });
@@ -42,7 +43,7 @@ export const loader: LoaderFunction = async ({ request, params }) => {
 }
 
 export default function JoinOpenChallengesPage() {
-    const data = useLoaderData() as LoaderData;
+    const data = useLoaderData<typeof loader>();
     const { width, height } = useWindowSize();
 
     const isMobile = width ? width < 640 : false;
@@ -54,6 +55,7 @@ export default function JoinOpenChallengesPage() {
                     <p>Here are the open challenges to join</p>
                     <div className="flex flex-wrap mt-8">
                         {data.challenges.map((challenge) => (
+                            // @ts-ignore
                             <ChallengeItem key={challenge.id} challenge={challenge} />
 
 
@@ -70,8 +72,6 @@ export default function JoinOpenChallengesPage() {
         </div>
     );
 }
-
-const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
 function ChallengeItem({ challenge }: { challenge: ChallengeWithActivities }) {
     let fetcher = useFetcher();

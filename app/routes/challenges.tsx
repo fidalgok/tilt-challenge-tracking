@@ -1,4 +1,4 @@
-import type { LoaderFunction } from "@remix-run/node";
+import type { LoaderArgs } from "@remix-run/node";
 import { json } from "@remix-run/node";
 import { Form, Link, useLoaderData, Outlet, NavLink } from "@remix-run/react";
 import { Fragment } from "react";
@@ -12,19 +12,15 @@ import { MenuIcon, XIcon } from "@heroicons/react/outline"
 
 
 
-type LoaderData = {
-  challengeListItems: Awaited<ReturnType<typeof getActiveChallengesListItems>>;
-};
-
-export const loader: LoaderFunction = async ({ request }) => {
+export const loader = async ({ request }: LoaderArgs) => {
   const userId = await requireUserId(request);
 
   const challengeListItems = await getActiveChallengesListItems({ userId });
-  return json<LoaderData>({ challengeListItems });
+  return json({ challengeListItems });
 }
 
 export default function ChallengesPage() {
-  const data = useLoaderData() as LoaderData;
+
   const user = useUser();
 
   return (
@@ -48,7 +44,7 @@ export default function ChallengesPage() {
       </header>
 
       <main className="grow flex flex-col md:flex-row  bg-white">
-        <ChallengesMenu data={data} />
+        <ChallengesMenu />
 
         <div className="flex-1 p-6">
           <Outlet />
@@ -58,7 +54,8 @@ export default function ChallengesPage() {
   )
 }
 
-function ChallengesMenu({ data }: { data: LoaderData }) {
+function ChallengesMenu() {
+  const data = useLoaderData<typeof loader>();
   const user = useUser();
   return (
     <Popover className="relative px-4 md:px-0">

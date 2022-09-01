@@ -1,4 +1,5 @@
 import type { Challenge, Prisma, User, ChallengeActivity, Entry, Activity } from "@prisma/client";
+import { startOfToday } from "date-fns";
 
 import { prisma } from "~/db.server";
 
@@ -107,17 +108,39 @@ export function createChallengeActivity({ challengeId, amount, trackType, unit, 
 }
 
 export function getOpenChallenges({ userId }: { userId: User["id"] }) {
+  let today = startOfToday();
 
   return prisma.challenge.findMany({
-    where: { published: true, public: true, users: { none: { id: userId } } },
+    where: {
+      published: true, public: true, users: { none: { id: userId } }, endDate: {
+        gte: today
+      }
+    },
     include: { activity: true },
 
   });
 }
 
 export function getActiveChallengesListItems({ userId }: { userId: User["id"] }) {
+  let today = startOfToday();
   return prisma.challenge.findMany({
-    where: { published: true, users: { some: { id: userId } } },
+    where: {
+      published: true, users: { some: { id: userId } }, endDate: {
+        gte: today
+      }
+    },
+    select: { id: true, title: true },
+    orderBy: { createdAt: "desc" },
+  });
+}
+export function getClosedChallengesListItems({ userId }: { userId: User["id"] }) {
+  let today = startOfToday();
+  return prisma.challenge.findMany({
+    where: {
+      published: true, users: { some: { id: userId } }, endDate: {
+        lte: today
+      }
+    },
     select: { id: true, title: true },
     orderBy: { createdAt: "desc" },
   });
@@ -144,7 +167,7 @@ export function adminGetChallengeEntries({ challengeId }: { challengeId: Challen
   });
 }
 
-export function getTotalSteps({ id, userId }: Pick<Challenge, "id"> & { userId: User["id"] }) {
+export function getTotalAmount({ id, userId }: Pick<Challenge, "id"> & { userId: User["id"] }) {
   return prisma.entry.aggregate({
     _sum: {
       amount: true
