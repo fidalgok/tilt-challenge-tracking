@@ -29,7 +29,7 @@ export const action: ActionFunction = async ({ request }) => {
 
 
     const joinedChallenge = await joinChallengeById({ id: challengeId, userId });
-    return redirect(`~/challenges/${joinedChallenge.id}`);
+    return redirect(`/challenges/${joinedChallenge.id}`);
 }
 
 
@@ -52,8 +52,8 @@ export default function JoinOpenChallengesPage() {
         <div>
             {data?.challenges.length ? (
                 <div>
-                    <p>Here are the open challenges to join</p>
-                    <div className="flex flex-wrap mt-8">
+                    <h2 className="text-2xl font-semibold">Join a Challenge:</h2>
+                    <div className="flex flex-wrap mt-8 gap-4">
                         {data.challenges.map((challenge) => (
                             // @ts-ignore
                             <ChallengeItem key={challenge.id} challenge={challenge} />
@@ -92,11 +92,14 @@ function ChallengeItem({ challenge }: { challenge: ChallengeWithActivities }) {
         , 'MMMM do')}`;
 
     return (
-        <div key={challenge.id} className="p-6 max-w-sm  bg-white rounded-xl shadow-lg flex flex-col items-start ">
-            <h3 className="text-2xl mb-4 font-bold">{challenge.title}</h3>
-            <p className="mb-2"><span className="block font-bold">When:</span> {startDate} through {endDate}</p>
-            <p className="mb-6"><span className="block font-bold">What:</span> {challenge.description}</p>
-            <fetcher.Form method="post">
+        <div key={challenge.id} className="p-6 w-96 bg-white rounded-xl shadow-lg flex flex-col">
+            <div>
+
+                <h3 className="text-2xl mb-4 font-bold">{challenge.title}</h3>
+                <p className="mb-2"><span className="block font-bold">When:</span> {startDate} through {endDate}</p>
+                <p className="mb-6 whitespace-pre-line"><span className="block font-bold">What:</span> {challenge.description}</p>
+            </div>
+            <fetcher.Form method="post" className="grow flex items-end">
                 <button className="rounded bg-blue-500 py-2 px-4 text-white hover:bg-blue-600 focus:bg-blue-400" value={challenge.id} name="id" type="submit" disabled={isJoining}>
                     {isJoining ? "Joining..." : "Join"}
                 </button>

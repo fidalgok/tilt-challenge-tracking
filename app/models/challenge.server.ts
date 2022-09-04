@@ -121,6 +121,20 @@ export function getOpenChallenges({ userId }: { userId: User["id"] }) {
   });
 }
 
+export function getClosedChallenges({ userId }: { userId: User["id"] }) {
+  let today = startOfToday();
+
+  return prisma.challenge.findMany({
+    where: {
+      published: true, public: true, endDate: {
+        lte: today
+      }
+    },
+    include: { activity: true },
+
+  });
+}
+
 export function getActiveChallengesListItems({ userId }: { userId: User["id"] }) {
   let today = startOfToday();
   return prisma.challenge.findMany({

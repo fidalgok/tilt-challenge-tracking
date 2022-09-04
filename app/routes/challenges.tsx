@@ -5,7 +5,7 @@ import { Fragment } from "react";
 
 import { requireUserId } from "../session.server";
 import { useUser } from "../utils";
-import { getActiveChallengesListItems } from "../models/challenge.server";
+import { getActiveChallengesListItems, getClosedChallengesListItems } from "../models/challenge.server";
 
 import { Popover, Transition } from "@headlessui/react"
 import { MenuIcon, XIcon } from "@heroicons/react/outline"
@@ -15,8 +15,13 @@ import { MenuIcon, XIcon } from "@heroicons/react/outline"
 export const loader = async ({ request }: LoaderArgs) => {
   const userId = await requireUserId(request);
 
-  const challengeListItems = await getActiveChallengesListItems({ userId });
-  return json({ challengeListItems });
+  const challengesPromise = getActiveChallengesListItems({ userId });
+  const pastChallengesPromise = getClosedChallengesListItems({ userId });
+
+  const [challengeListItems, pastChallengeListItems] = await Promise.all([challengesPromise, pastChallengesPromise]);
+
+
+  return json({ challengeListItems, pastChallengeListItems });
 }
 
 export default function ChallengesPage() {
@@ -73,9 +78,7 @@ function ChallengesMenu() {
 
           <hr />
 
-          {data.challengeListItems.length === 0 ? (
-            <p className="p-4">No challenges yet</p>
-          ) : (
+          {data.challengeListItems.length === 0 ? null : (
             <ol>
               {data.challengeListItems.map((challenge) => (
                 <li key={challenge.id}>
@@ -90,6 +93,13 @@ function ChallengesMenu() {
                 </li>
               ))}
             </ol>
+          )}
+          {data.pastChallengeListItems?.length === 0 ? null : (
+            <div className="mt-4">
+
+
+              <Link to="complete" className="block p-4 text-xl" >Archived Challenges</Link>
+            </div>
           )}
           {user?.role === 'ADMIN' && (
             <>

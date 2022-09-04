@@ -42,7 +42,7 @@ export default function AdminPage() {
                 <div className="flex flex-col sm:items-center sm:flex-row sm:justify-between">
 
                     <h1 className="text-3xl font-bold sm:mr-8">
-                        <Link to=".">Challenges</Link>
+                        <Link to="/challenges">Challenges</Link>
                     </h1>
                     <p>{user.email}</p>
                 </div>
@@ -141,65 +141,83 @@ function ChallengesMenu({ data }: { data: LoaderData }) {
                 leaveFrom="opacity-100 scale-100"
                 leaveTo="opacity-0 scale-95"
             >
-                <Popover.Panel focus className="absolute top-0 inset-x-0 p-2 transition transform origin-top-right md:hidden">
-                    <div className="rounded-lg shadow-lg ring-1 ring-black ring-opacity-5 bg-white divide-y-2 divide-gray-50">
-                        <div className="pt-5 pb-6 px-2">
-                            <div className="flex items-center justify-between">
+                <Popover.Panel focus className="z-50 absolute top-0 inset-x-0 p-2 transition transform origin-top-right md:hidden">
+                    {({ close }) => (
 
-                                <Popover.Button className="bg-white rounded-md p-2 inline-flex items-center justify-center text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500">
-                                    <span className="sr-only">Close menu</span>
-                                    <XIcon className="h-6 w-6" aria-hidden="true" />
-                                </Popover.Button>
+
+                        <div className="rounded-lg shadow-lg ring-1 ring-black ring-opacity-5 bg-white divide-y-2 divide-gray-50">
+                            <div className="p-2">
+                                <div className="flex items-center justify-between">
+
+                                    <Popover.Button className="bg-white rounded-md p-2 inline-flex items-center justify-center text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500">
+                                        <span className="sr-only">Close menu</span>
+                                        <XIcon className="h-6 w-6" aria-hidden="true" />
+                                    </Popover.Button>
+                                </div>
+                            </div>
+                            <div className="mt-2">
+                                <nav className="grid gap-y-8">
+                                    <div className="sm:h-full  sm:max-w-sm border-r bg-gray-50">
+                                        <Link
+                                            onClick={() => close()}
+                                            to="/challenges/join" className="block p-4 text-xl text-blue-500">
+                                            + Join Other Active Challenges
+                                        </Link>
+
+                                        <hr />
+
+                                        {data.challengeListItems.length === 0 ? (
+                                            <p className="p-4">No challenges yet</p>
+                                        ) : (
+                                            <ol>
+                                                {data.challengeListItems.map((challenge) => (
+                                                    <li key={challenge.id}>
+                                                        <NavLink
+                                                            onClick={() => close()}
+                                                            className={({ isActive }) =>
+                                                                `block border-b p-4 text-xl ${isActive ? "bg-white" : ""}`
+                                                            }
+                                                            to={`/challenges/${challenge.id}`}
+                                                        >
+                                                            🏆 {challenge.title}
+                                                        </NavLink>
+                                                    </li>
+                                                ))}
+                                            </ol>
+                                        )}
+                                        <hr />
+                                        <div className="mt-4">
+                                            <p className="p-4 text-xl">Admin</p>
+                                        </div>
+                                        <ol>
+                                            <li>
+
+                                                <NavLink
+                                                    className="block p-4 text-xl"
+                                                    onClick={() => close()}
+                                                    to="./challenges/new">Create a New Challenge</NavLink>
+                                            </li>
+                                            <li>
+
+                                                <NavLink
+                                                    className="block p-4 text-xl"
+                                                    onClick={() => close()}
+                                                    to="./challenges/">Manage Challenges</NavLink>
+                                            </li>
+                                            <li>
+
+                                                <NavLink
+                                                    className="block p-4 text-xl"
+                                                    onClick={() => close()}
+                                                    to="./users">Manage Users</NavLink>
+                                            </li>
+
+                                        </ol>
+                                    </div>
+                                </nav>
                             </div>
                         </div>
-                        <div className="mt-2">
-                            <nav className="grid gap-y-8">
-                                <div className="sm:h-full  sm:max-w-sm border-r bg-gray-50">
-                                    <Link to="join" className="block p-4 text-xl text-blue-500">
-                                        + Join Other Active Challenges
-                                    </Link>
-
-                                    <hr />
-
-                                    {data.challengeListItems.length === 0 ? (
-                                        <p className="p-4">No challenges yet</p>
-                                    ) : (
-                                        <ol>
-                                            {data.challengeListItems.map((challenge) => (
-                                                <li key={challenge.id}>
-                                                    <NavLink
-                                                        className={({ isActive }) =>
-                                                            `block border-b p-4 text-xl ${isActive ? "bg-white" : ""}`
-                                                        }
-                                                        to={`/challenges/${challenge.id}`}
-                                                    >
-                                                        🏆 {challenge.title}
-                                                    </NavLink>
-                                                </li>
-                                            ))}
-                                        </ol>
-                                    )}
-                                    <hr />
-                                    <ol>
-                                        <li>
-
-                                            <NavLink to="./challenges/new">Create a New Challenge</NavLink>
-                                        </li>
-                                        <li>
-
-                                            <NavLink to="./challenges/">Manage Challenges</NavLink>
-                                        </li>
-                                        <li>
-
-                                            <NavLink to="./users">Manage Users</NavLink>
-                                        </li>
-
-                                    </ol>
-                                </div>
-                            </nav>
-                        </div>
-                    </div>
-
+                    )}
                 </Popover.Panel>
             </Transition>
 
