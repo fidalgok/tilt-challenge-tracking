@@ -1,4 +1,4 @@
-import type { LoaderFunction, ActionFunction } from "@remix-run/node";
+import type { ActionFunction, LoaderArgs } from "@remix-run/node";
 import { json, redirect } from "@remix-run/node";
 import { Form, useActionData, useParams, useMatches, useCatch, useLoaderData, Link } from "@remix-run/react";
 import * as React from "react";
@@ -122,19 +122,19 @@ export const action: ActionFunction = async ({ request, params }) => {
     return redirect(`/challenges/${challengeId}`);
 }
 
-export const loader: LoaderFunction = async ({ request, params }) => {
+export const loader = async ({ request, params }: LoaderArgs) => {
     const userId = await requireUserId(request);
     invariant(params.entryId, "Entry ID not found");
     const entry = await getEntryById(params.entryId);
     if (!entry) {
         throw new Response("Not Found", { status: 404 });
     }
-    return json<LoaderData>({ entry });
+    return json({ entry });
 }
 
 export default function EditChallengeEntryPage() {
     const actionData = useActionData() as ActionData;
-    const loaderData = useLoaderData() as LoaderData;
+    const loaderData = useLoaderData<typeof loader>();
 
     const activityDate = parseDateStringFromServer(loaderData.entry.date.toString());
     const month = format(new Date(activityDate), "MMM");

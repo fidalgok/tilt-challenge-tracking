@@ -25,7 +25,7 @@ export function AdminEntriesCalendar({ entries }: { entries: Entry[] }) {
     // eventually will come from the server
     const timezoneOffsets = useTimeZoneOffset();
     const [searchParams] = useSearchParams();
-    const { maybeMobile } = useLoaderData() as LoaderData;
+    const { maybeMobile } = useLoaderData();
     const screenWidth = useWindowSize();
     const view = searchParams.get("view") === "week" ? "week" :
         maybeMobile ? "week" :

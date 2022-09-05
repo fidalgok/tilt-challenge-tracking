@@ -1,13 +1,14 @@
 import { Link, useLoaderData } from "@remix-run/react";
-import { json, LoaderFunction } from "@remix-run/node";
-import { ChallengeWithActivities, getChallengesByAdminId } from "~/models/challenge.server";
-
-export type LoaderData = {
-    challenges: Awaited<ReturnType<typeof getChallengesByAdminId>>;
-}
+import { json } from "@remix-run/node";
+import type { LoaderArgs } from "@remix-run/node";
+import { getChallengesByAdminId } from "~/models/challenge.server";
+import type { ChallengeWithActivities } from "~/models/challenge.server";
 
 
-export const loader: LoaderFunction = async ({ request }) => {
+
+
+
+export const loader = async ({ request }: LoaderArgs) => {
 
     const challenges = await getChallengesByAdminId();
 
@@ -15,13 +16,14 @@ export const loader: LoaderFunction = async ({ request }) => {
 }
 
 export default function AdminChallengesIndexPage() {
-    const loaderData = useLoaderData() as LoaderData;
+    const loaderData = useLoaderData<typeof loader>();
 
     return (
         <div>
             TODO: add dashboard for the various admin duties
             <div className="grid grid-cols-[repeat(auto-fit,385px)] gap-4  ">
                 {loaderData.challenges.map((challenge) => (
+                    // @ts-ignore
                     <ChallengeItem key={challenge.id} challenge={challenge} />
                 ))}
             </div>
@@ -32,7 +34,10 @@ export default function AdminChallengesIndexPage() {
     );
 }
 
+
 function ChallengeItem({ challenge }: { challenge: ChallengeWithActivities }) {
+
+
     const startDate = challenge.startDate.toString();
     const endDate = challenge.endDate.toString()
 
