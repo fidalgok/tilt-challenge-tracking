@@ -1,30 +1,31 @@
-import type { LoaderFunction } from "@remix-run/node";
+import type { LoaderArgs } from "@remix-run/node";
 import { json } from "@remix-run/node";
 import { Form, Link, useLoaderData, Outlet, NavLink } from "@remix-run/react";
 import { Fragment } from "react";
 
 import { requireUserId } from "../session.server";
 import { useUser } from "../utils";
-import { getActiveChallengesListItems } from "../models/challenge.server";
+import { getActiveChallengesListItems, getClosedChallengesListItems } from "../models/challenge.server";
 
 import { Popover, Transition } from "@headlessui/react"
 import { MenuIcon, XIcon } from "@heroicons/react/outline"
 
 
 
-type LoaderData = {
-  challengeListItems: Awaited<ReturnType<typeof getActiveChallengesListItems>>;
-};
-
-export const loader: LoaderFunction = async ({ request }) => {
+export const loader = async ({ request }: LoaderArgs) => {
   const userId = await requireUserId(request);
 
-  const challengeListItems = await getActiveChallengesListItems({ userId });
-  return json<LoaderData>({ challengeListItems });
+  const challengesPromise = getActiveChallengesListItems({ userId });
+  const pastChallengesPromise = getClosedChallengesListItems({ userId });
+
+  const [challengeListItems, pastChallengeListItems] = await Promise.all([challengesPromise, pastChallengesPromise]);
+
+
+  return json({ challengeListItems, pastChallengeListItems });
 }
 
 export default function ChallengesPage() {
-  const data = useLoaderData() as LoaderData;
+
   const user = useUser();
 
   return (
@@ -48,7 +49,7 @@ export default function ChallengesPage() {
       </header>
 
       <main className="grow flex flex-col md:flex-row  bg-white">
-        <ChallengesMenu data={data} />
+        <ChallengesMenu />
 
         <div className="flex-1 p-6">
           <Outlet />
@@ -58,7 +59,8 @@ export default function ChallengesPage() {
   )
 }
 
-function ChallengesMenu({ data }: { data: LoaderData }) {
+function ChallengesMenu() {
+  const data = useLoaderData<typeof loader>();
   const user = useUser();
   return (
     <Popover className="relative px-4 md:px-0">
@@ -76,9 +78,7 @@ function ChallengesMenu({ data }: { data: LoaderData }) {
 
           <hr />
 
-          {data.challengeListItems.length === 0 ? (
-            <p className="p-4">No challenges yet</p>
-          ) : (
+          {data.challengeListItems.length === 0 ? null : (
             <ol>
               {data.challengeListItems.map((challenge) => (
                 <li key={challenge.id}>
@@ -93,6 +93,13 @@ function ChallengesMenu({ data }: { data: LoaderData }) {
                 </li>
               ))}
             </ol>
+          )}
+          {data.pastChallengeListItems?.length === 0 ? null : (
+            <div className="mt-4">
+
+
+              <Link to="complete" className="block p-4 text-xl" >Archived Challenges</Link>
+            </div>
           )}
           {user?.role === 'ADMIN' && (
             <>

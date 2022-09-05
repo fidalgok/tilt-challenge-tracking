@@ -1,5 +1,6 @@
 import { Outlet, useLoaderData } from "@remix-run/react";
-import { json, LoaderFunction } from "@remix-run/node";
+import { json } from "@remix-run/node";
+import type { LoaderArgs } from "@remix-run/node";
 import { adminGetChallenge, ChallengeWithActivitiesUsers } from "~/models/challenge.server";
 import invariant from "tiny-invariant";
 
@@ -13,7 +14,7 @@ type LoaderData = {
     challenge: ChallengeWithActivitiesUsers
 }
 
-export const loader: LoaderFunction = async ({ request, params }) => {
+export const loader = async ({ request, params }: LoaderArgs) => {
 
     const user = await getUser(request);
 
@@ -27,7 +28,7 @@ export const loader: LoaderFunction = async ({ request, params }) => {
 
 
 export default function AdminChallengesViewChallengePage() {
-    const data = useLoaderData() as LoaderData;
+    const data = useLoaderData<typeof loader>();
     return (
         <div>
             <h3 className="text-3xl font-bold">{data.challenge.title}</h3>

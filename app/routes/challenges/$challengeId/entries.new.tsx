@@ -106,23 +106,10 @@ export const action: ActionFunction = async ({ request, params }) => {
 
 
 export const loader: LoaderFunction = async ({ request, params }) => {
-    const userId = await requireUserId(request);
+    await requireUserId(request);
     const challengeId = params.challengeId;
     invariant(challengeId, "challengeId is required");
-    // const entries = await getChallengeEntries({ id: challengeId, userId });
-    // const url = new URL(request.url);
-    // const date = url.searchParams.get("date") ;
 
-    // console.log(date)
-    // const foundEntry = entries?.find(entry => isSameDay(new Date(parseDateStringFromServer(entry.date.toString())), new Date(prepareDateForServer(date))));
-
-    // if (foundEntry) {
-    //     return redirect(`/challenges/${challengeId}/entries/${foundEntry.id}/edit`);
-    // }
-    // return json<LoaderData>({
-    //     date
-
-    // })
     return null;
 }
 

@@ -1,25 +1,14 @@
 import { useActionData, useLoaderData } from "@remix-run/react";
 
 import { Entry, User } from "@prisma/client";
-import { ActionFunction, json, LoaderFunction } from "@remix-run/node";
+import { ActionFunction, json } from "@remix-run/node";
+import type { LoaderArgs } from "@remix-run/node";
 import { adminGetChallengeEntries, deleteEntry } from "~/models/challenge.server";
 
 import invariant from "tiny-invariant";
 import { requireUserId } from "~/session.server";
 import { AdminEntriesCalendar } from "~/components/AdminEntriesCalendar";
 
-
-type LoaderData = {
-    entries: (Entry & {
-        user: User & {
-            profile: {
-                firstName: string;
-                lastName: string;
-            } | null;
-        };
-    })[],
-    maybeMobile: boolean;
-}
 
 type ActionData = {
     errors?: {
@@ -56,25 +45,25 @@ export const action: ActionFunction = async ({ request }) => {
     return null;
 }
 
-export const loader: LoaderFunction = async ({ request, params }) => {
+export const loader = async ({ request, params }: LoaderArgs) => {
     // get request headers
     const userAgent = request.headers.get("user-agent");
     const maybeMobile = userAgent ? userAgent.toLowerCase().indexOf('mobi') > -1 : false;
     invariant(params.challengeId, "challengeId not found");
 
     const entries = await adminGetChallengeEntries({ challengeId: params.challengeId });
-    return json<LoaderData>({ entries, maybeMobile });
+    return json({ entries, maybeMobile });
 
 }
 
 export default function AdminChallengeIdEntriesPage() {
-    const data = useLoaderData() as LoaderData;
+    const data = useLoaderData<typeof loader>();
     const actionData = useActionData() as ActionData;
 
     return (
         <div>
             TODO: entries for challenge ID and activity ID
-
+            {/* @ts-ignore */}
             <AdminEntriesCalendar entries={data.entries} />
         </div>
     );

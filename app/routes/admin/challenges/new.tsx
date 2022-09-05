@@ -35,12 +35,6 @@ type LoaderData = {
 export const action: ActionFunction = async ({ request }) => {
     const userId = await requireUserId(request);
     const user = await getUserById(userId);
-    let reqHeaders = request.headers.entries();
-    // Display the key/value pairs
-    for (var pair of reqHeaders) {
-        //console.log(pair[0] + ': ' + pair[1]);
-    }
-
 
     if (!user) {
         return json({ message: 'unauthorized' }, { status: 401 });
@@ -159,7 +153,7 @@ export const action: ActionFunction = async ({ request }) => {
         activityName: activityName,
     })
 
-    return json<ActionData>({ success: "Challenge created successfully." });
+    return redirect(`/admin/challenges/${challenge.id}`)
 }
 
 export const loader: LoaderFunction = async ({ request }) => {
@@ -382,7 +376,7 @@ function ActivityDetails({ fieldErrors }: { fieldErrors: ActionData["errors"] })
             <div>
                 <div className="md:grid md:grid-cols-3 md:gap-6">
                     <div className="md:col-span-1">
-                        <div className="px-4 sm:px-0">
+                        <div className="mt-5 px-4 sm:px-0">
                             <h3 className="text-xl font-medium leading-6 text-gray-900">Activity Details</h3>
                             <p className="mt-1 text-sm text-gray-600">
                                 Add activities to track for this challenge.
@@ -630,3 +624,4 @@ function CheckIcon({ className }: { className: string }) {
         </svg>
     )
 }
+

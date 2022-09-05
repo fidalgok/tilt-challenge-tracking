@@ -1,10 +1,10 @@
 import { json } from "@remix-run/node";
 import { Outlet, useCatch, useLoaderData } from "@remix-run/react";
 import invariant from "tiny-invariant";
-import type { LoaderFunction } from "@remix-run/node";
+import type { LoaderArgs } from "@remix-run/node";
 
 import { Entry, ChallengeWithActivities, getChallengeLeaderboard } from "~/models/challenge.server";
-import { getChallengeEntries, getChallenge, getTotalSteps } from "~/models/challenge.server";
+import { getChallengeEntries, getChallenge, getTotalAmount } from "~/models/challenge.server";
 
 import { requireUserId } from "~/session.server";
 import NavBar from "~/components/NavBar";
@@ -31,7 +31,7 @@ type LeaderBoardReduceReturnType = {
     userId: string;
 }
 
-export const loader: LoaderFunction = async ({ request, params }) => {
+export const loader = async ({ request, params }: LoaderArgs) => {
     const userId = await requireUserId(request);
     // get request headers
     const userAgent = request.headers.get("user-agent");
@@ -45,7 +45,7 @@ export const loader: LoaderFunction = async ({ request, params }) => {
 
     const entries = await getChallengeEntries({ id: params.challengeId, userId });
 
-    const aggregation = await getTotalSteps({ id: params.challengeId, userId });
+    const aggregation = await getTotalAmount({ id: params.challengeId, userId });
 
     const leaderboardData = await getChallengeLeaderboard({ id: params.challengeId });
     const leaderboard = leaderboardData
@@ -70,13 +70,13 @@ export const loader: LoaderFunction = async ({ request, params }) => {
         });
 
 
-    return json<LoaderData>({ challenge, entries: entries, totalSteps: aggregation._sum.amount || 0, leaderboard, maybeMobile });
+    return json({ challenge, entries: entries, totalSteps: aggregation._sum.amount || 0, leaderboard, maybeMobile });
 
 }
 
 
 export default function ChallengeDetailsPage() {
-    const data = useLoaderData() as LoaderData;
+    const data = useLoaderData<typeof loader>();
 
 
 
