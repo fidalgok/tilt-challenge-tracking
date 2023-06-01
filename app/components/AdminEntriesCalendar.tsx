@@ -9,17 +9,6 @@ import { Entry, User } from "@prisma/client";
 
 import type { EntriesWithUserProfiles } from "~/models/challenge.server";
 
-type LoaderData = {
-    entries: (Entry & {
-        user: User & {
-            profile: {
-                firstName: string;
-                lastName: string;
-            } | null;
-        };
-    })[],
-    maybeMobile: boolean;
-}
 
 export function AdminEntriesCalendar({ entries }: { entries: Entry[] }) {
     // eventually will come from the server

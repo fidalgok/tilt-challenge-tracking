@@ -24,6 +24,16 @@ A list of challenges faced while building the app.
 - Couldn't get the users profile to load in the project root for some reason. Even though I included the one to many relationship in the query and even added the code from one of the points above, my application still didn't recognize that the user object had a profile on it. Maybe it's due to how optional user handles the use matches? :shrug:
 
 
+## TODO: 
+
+- It would be nice to have a show more option for longer challenge descriptions.
+- Fix visual inconsistencies and update UI to look a bit more polished.
+- User profiles with gym information and profile pics
+- Complete/Incomplete Challenge page design
+- multiple activities per challenge
+- refactor the db schema? Easier challenge creation, maybe a leaderboard table?
+
+
 
     [1]: <https://github.com/prisma/prisma/discussions/10928#:~:text=Prisma%20Version&text=Since%20Prisma%20queries%20do%20not,%2Din%20utility%20types%2C%20though.>
     [2]: <https://dev.to/zachgoll/a-complete-guide-to-javascript-dates-and-why-your-date-is-off-by-1-day-fi1>

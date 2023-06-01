@@ -107,6 +107,7 @@ export default function ResetPassword() {
             <div className="mx-auto w-full max-w-2xl px-8">
 
                 <h1 className="text-5xl text-center mb-8">Tilt Challenge Tracking</h1>
+                <h2 className="text-3xl text-center mb-12">Reset your password</h2>
             </div>
             <div className="mx-auto w-full max-w-md px-8">
                 {actionData?.errors?.reset && (
